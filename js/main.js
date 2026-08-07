@@ -1127,6 +1127,16 @@ document.addEventListener('DOMContentLoaded', function () {
   // Both sections are driven by the same fetch: the newest post becomes the
   // featured news card, the rest fill the adventures grid. Post to Instagram and
   // the site catches up on its own within half an hour.
+  //
+  // How many tiles show before "Show more". A multiple of the grid's column
+  // count (4 on desktop, 2 on mobile) so the last row is never left ragged.
+  var TILES_BEFORE_MORE = 8;
+
+  // Corner badges, same visual language Instagram uses: a play arrow for video,
+  // stacked cards for a post with more than one photo.
+  var BADGE_VIDEO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  var BADGE_ALBUM = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="13" height="13" rx="2"/><path d="M4 8v11a2 2 0 0 0 2 2h11"/></svg>';
+
   var newsContainer = document.getElementById('latest-news');
   var feedContainer = document.getElementById('instagram-feed');
 
@@ -1140,7 +1150,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var posts = (data && data.posts) || [];
         if (!posts.length) throw new Error('No posts returned');
         populateLatestNews(posts[0]);
-        populateInstagramFeed(posts.slice(1, 9));
+        // The featured post leads the news section, so keep it out of the grid.
+        populateInstagramFeed(posts.slice(1));
       })
       .catch(function () {
         showSocialFallback();
@@ -1201,12 +1212,24 @@ document.addEventListener('DOMContentLoaded', function () {
     removeEl('latest-news-loading');
     removeEl('latest-news-fallback');
 
+    var images = imagesOf(post);
     var dateText = formatPostDate(post.timestamp);
+    var altText = truncate(caption, 100) || 'Latest post from Triffid Explorers';
     var html = '<div class="two-col">';
 
-    if (post.image) {
+    if (images.length) {
       html += '<div class="two-col-image">';
-      html += '  <img src="' + escapeHtml(post.image) + '" alt="' + escapeHtml(truncate(caption, 100) || 'Latest post from Triffid Explorers') + '">';
+      html += '  <img id="latest-news-image" src="' + escapeHtml(images[0]) + '" alt="' + escapeHtml(altText) + '">';
+      // A carousel gets its slides as a thumbnail strip under the main image.
+      if (images.length > 1) {
+        html += '  <div class="news-gallery" role="group" aria-label="Photos from this post">';
+        images.forEach(function (src, i) {
+          html += '<button type="button" class="news-gallery-thumb' + (i === 0 ? ' is-current' : '') + '"' +
+            ' data-src="' + escapeHtml(src) + '" aria-label="Show photo ' + (i + 1) + ' of ' + images.length + '">' +
+            '<img src="' + escapeHtml(src) + '" alt="" loading="lazy"></button>';
+        });
+        html += '  </div>';
+      }
       html += '</div>';
     }
 
@@ -1222,6 +1245,30 @@ document.addEventListener('DOMContentLoaded', function () {
     html += '</div>';
 
     container.innerHTML = html;
+
+    if (images.length > 1) wireNewsGallery(container);
+  }
+
+  // Clicking a thumbnail swaps the main image. Buttons rather than links, so it
+  // works from the keyboard and doesn't add history entries.
+  function wireNewsGallery(container) {
+    var main = container.querySelector('#latest-news-image');
+    var thumbs = container.querySelectorAll('.news-gallery-thumb');
+    if (!main) return;
+
+    thumbs.forEach(function (thumb) {
+      thumb.addEventListener('click', function () {
+        main.src = thumb.getAttribute('data-src');
+        thumbs.forEach(function (other) { other.classList.remove('is-current'); });
+        thumb.classList.add('is-current');
+      });
+    });
+  }
+
+  // Posts synced before multi-image support only carry a single `image`.
+  function imagesOf(post) {
+    if (post.images && post.images.length) return post.images;
+    return post.image ? [post.image] : [];
   }
 
   function populateInstagramFeed(posts) {
@@ -1238,14 +1285,18 @@ document.addEventListener('DOMContentLoaded', function () {
     removeEl('instagram-feed-loading');
 
     var html = '';
-    withImages.forEach(function (post) {
+    withImages.forEach(function (post, i) {
       var caption = cleanCaption(post.caption);
       var alt = truncate(caption, 100) || 'Instagram post from Triffid Explorers';
+      var slides = imagesOf(post).length;
+      var extra = i >= TILES_BEFORE_MORE ? ' is-hidden' : '';
 
-      html += '<a class="instagram-post" href="' + escapeHtml(post.permalink) + '" target="_blank" rel="noopener noreferrer">';
+      html += '<a class="instagram-post' + extra + '" href="' + escapeHtml(post.permalink) + '" target="_blank" rel="noopener noreferrer">';
       html += '  <img src="' + escapeHtml(post.image) + '" alt="' + escapeHtml(alt) + '" loading="lazy">';
       if (post.mediaType === 'VIDEO') {
-        html += '  <span class="instagram-post-type" aria-label="Video">▶</span>';
+        html += '  <span class="instagram-post-type instagram-post-type--video" aria-label="Video">' + BADGE_VIDEO + '</span>';
+      } else if (slides > 1) {
+        html += '  <span class="instagram-post-type instagram-post-type--album" aria-label="' + slides + ' photos">' + BADGE_ALBUM + '</span>';
       }
       if (caption) {
         html += '  <span class="instagram-post-caption">' + escapeHtml(truncate(caption, 140)) + '</span>';
@@ -1254,6 +1305,26 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     container.innerHTML = html;
+
+    if (withImages.length > TILES_BEFORE_MORE) addShowMore(container, withImages.length);
+  }
+
+  // Everything is already downloaded, so revealing the rest is instant — no
+  // second request, and no wall of photos before anyone asks for one.
+  function addShowMore(container, total) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn btn-outline instagram-more';
+    button.textContent = 'Show more posts';
+
+    button.addEventListener('click', function () {
+      container.querySelectorAll('.instagram-post.is-hidden').forEach(function (tile) {
+        tile.classList.remove('is-hidden');
+      });
+      button.remove();
+    });
+
+    container.insertAdjacentElement('afterend', button);
   }
 
   // Instagram is unreachable (or not set up yet) — show the hand-written news

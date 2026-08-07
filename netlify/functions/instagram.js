@@ -4,7 +4,7 @@
 // wrote overnight, so Instagram isn't involved in a page view at all. The live
 // call is only a stopgap for the window between deploying and the first sync.
 
-import { readCachedPosts, fetchRecentPosts } from '../lib/instagram.js';
+import { readCachedPosts, fetchRecentPosts, postLimit } from '../lib/instagram.js';
 
 const CACHE_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -25,7 +25,7 @@ export default async () => {
   try {
     // No sync has landed yet — go straight to Instagram. Images still point at
     // Instagram's CDN until the first sync copies them across.
-    const posts = await fetchRecentPosts(12);
+    const posts = await fetchRecentPosts(postLimit());
 
     return new Response(JSON.stringify({ posts, syncedAt: new Date().toISOString(), source: 'live' }), {
       status: 200,
