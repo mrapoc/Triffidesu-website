@@ -277,7 +277,7 @@
     </div>
   </section>
 
-  <!-- LATEST NEWS (auto-populated from Curator feed) -->
+  <!-- LATEST NEWS (auto-populated from our Instagram feed) -->
   <section class="section section-alt" id="news">
     <div class="container">
       <div class="section-header">
@@ -285,7 +285,7 @@
         <p>See what our Explorers have been achieving recently.</p>
       </div>
       <div id="latest-news" class="latest-news-featured">
-        <!-- Fallback hidden by default, shown only if Curator fails to load -->
+        <!-- Fallback hidden by default, shown only if the Instagram feed fails to load -->
         <div class="two-col" id="latest-news-fallback" style="display: none;">
           <div class="two-col-image">
             <img src="images/first aid 3.jpg" alt="Triffid Explorers with their Stage 4 Emergency Aid certificates" width="1536" height="2048" loading="lazy">
@@ -302,14 +302,22 @@
     </div>
   </section>
 
-  <!-- LATEST ADVENTURES (Curator.io Feed) -->
+  <!-- LATEST ADVENTURES (auto-populated from our Instagram feed) -->
   <section class="section" id="social">
     <div class="container">
       <div class="section-header">
         <h2>Latest Adventures</h2>
-        <p>Fresh from our social media &mdash; follow us on <a href="https://www.facebook.com/triffidesu" target="_blank" rel="noopener noreferrer">Facebook</a> and <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer">Instagram</a> for more!</p>
+        <p>Fresh from our social media &mdash; follow us on <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer">Instagram</a> and <a href="https://www.facebook.com/triffidesu" target="_blank" rel="noopener noreferrer">Facebook</a> for more!</p>
       </div>
-      <div id="curator-feed-default-feed-layout"><a href="https://curator.io" target="_blank" class="crt-logo crt-tag">Powered by Curator.io</a></div>
+      <div class="instagram-feed-area">
+        <div id="instagram-feed" class="instagram-grid"></div>
+        <p id="instagram-feed-loading" style="text-align: center; color: var(--grey);">Loading our latest posts&hellip;</p>
+        <!-- Hidden by default, shown only if the Instagram feed fails to load -->
+        <div id="instagram-feed-fallback" class="instagram-fallback" style="display: none;">
+          <p>Our feed is having a rest &mdash; pop over to Instagram to see what we've been up to.</p>
+          <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer" class="btn btn-outline">View our Instagram</a>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -533,13 +541,5 @@
     brainrot mode: type our unit name (7 letters) or ?vibe=check
   -->
   <script src="js/main.js" defer></script>
-  <script type="text/javascript">
-  /* curator-feed-default-feed-layout */
-  (function(){
-  var i,e,d=document,s="script";i=d.createElement("script");i.async=1;i.charset="UTF-8";
-  i.src="https://cdn.curator.io/published/7b24b130-db74-472b-b55c-8993c9237912.js";
-  e=d.getElementsByTagName(s)[0];e.parentNode.insertBefore(i, e);
-  })();
-  </script>
 </body>
 </html>

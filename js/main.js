@@ -1122,56 +1122,91 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })();
 
-  // ===== LATEST NEWS (pull first post from Curator feed) =====
+
+  // ===== INSTAGRAM FEED (Latest News + Latest Adventures) =====
+  // Both sections are driven by the same fetch: the newest post becomes the
+  // featured news card, the rest fill the adventures grid. Post to Instagram and
+  // the site catches up on its own within half an hour.
   var newsContainer = document.getElementById('latest-news');
-  if (newsContainer) {
-    var curatorCheckCount = 0;
-    var curatorInterval = setInterval(function () {
-      curatorCheckCount++;
-      var posts = document.querySelectorAll('#curator-feed-default-feed-layout .crt-post');
-      if (posts.length > 0) {
-        clearInterval(curatorInterval);
-        var loading = document.getElementById('latest-news-loading');
-        if (loading) loading.remove();
+  var feedContainer = document.getElementById('instagram-feed');
+
+  if (newsContainer || feedContainer) {
+    fetch('/.netlify/functions/instagram')
+      .then(function (res) {
+        if (!res.ok) throw new Error('Instagram feed unavailable');
+        return res.json();
+      })
+      .then(function (data) {
+        var posts = (data && data.posts) || [];
+        if (!posts.length) throw new Error('No posts returned');
         populateLatestNews(posts[0]);
-      }
-      // After 15 seconds, give up and show the static fallback
-      if (curatorCheckCount > 30) {
-        clearInterval(curatorInterval);
-        var loading = document.getElementById('latest-news-loading');
-        if (loading) loading.remove();
-        var fallback = document.getElementById('latest-news-fallback');
-        if (fallback) fallback.style.display = '';
-      }
-    }, 500);
+        populateInstagramFeed(posts.slice(1, 9));
+      })
+      .catch(function () {
+        showSocialFallback();
+      });
   }
 
-  function populateLatestNews(postEl) {
-    // Extract image
-    var imgEl = postEl.querySelector('.crt-post-content-image img, .crt-grid-post-image img, img');
-    var imgSrc = imgEl ? (imgEl.getAttribute('data-src') || imgEl.src) : '';
+  function removeEl(id) {
+    var el = document.getElementById(id);
+    if (el) el.remove();
+  }
 
-    // Extract text content
-    var textEl = postEl.querySelector('.crt-post-text');
-    var postText = textEl ? textEl.textContent.trim() : '';
+  function showEl(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = '';
+  }
 
-    // Extract date
-    var dateEl = postEl.querySelector('.crt-post-date, .crt-post-date-link');
-    var dateText = dateEl ? dateEl.textContent.trim() : '';
+  // Instagram captions often end with a wall of hashtags. Fine on Instagram,
+  // noisy on the site.
+  function cleanCaption(caption) {
+    if (!caption) return '';
+    var lines = caption.split('\n');
+    while (lines.length) {
+      var last = lines[lines.length - 1].trim();
+      if (last === '' || /^(#[^\s#]+\s*)+$/.test(last)) {
+        lines.pop();
+      } else {
+        break;
+      }
+    }
+    return lines.join('\n').trim();
+  }
 
-    // Extract link to original post
-    var linkEl = postEl.querySelector('a[href*="facebook.com"], a[href*="instagram.com"]');
-    var postLink = linkEl ? linkEl.href : 'https://www.facebook.com/triffidesu';
+  function truncate(text, maxLength) {
+    if (!text || text.length <= maxLength) return text;
+    var cut = text.slice(0, maxLength);
+    var lastSpace = cut.lastIndexOf(' ');
+    if (lastSpace > maxLength * 0.6) cut = cut.slice(0, lastSpace);
+    return cut.trim() + '…';
+  }
 
-    // Only replace if we got text (image optional)
-    if (!postText) return;
+  function formatPostDate(timestamp) {
+    if (!timestamp) return '';
+    var date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
 
-    // Build the featured news card
+  function populateLatestNews(post) {
+    var container = document.getElementById('latest-news');
+    if (!container) return;
+
+    var caption = cleanCaption(post.caption);
+    if (!caption && !post.image) {
+      showSocialFallback();
+      return;
+    }
+
+    removeEl('latest-news-loading');
+    removeEl('latest-news-fallback');
+
+    var dateText = formatPostDate(post.timestamp);
     var html = '<div class="two-col">';
 
-    if (imgSrc) {
+    if (post.image) {
       html += '<div class="two-col-image">';
-      html += '  <img src="' + escapeHtml(imgSrc) + '" alt="Latest post from Triffid Explorers">';
+      html += '  <img src="' + escapeHtml(post.image) + '" alt="' + escapeHtml(truncate(caption, 100) || 'Latest post from Triffid Explorers') + '">';
       html += '</div>';
     }
 
@@ -1179,18 +1214,54 @@ document.addEventListener('DOMContentLoaded', function () {
     if (dateText) {
       html += '<p style="color: var(--grey); font-size: 0.85rem; margin-bottom: 0.5rem;">' + escapeHtml(dateText) + '</p>';
     }
-    // Show the full post text, preserving line breaks
-    html += '<p style="font-size: 1.05rem; line-height: 1.7; white-space: pre-line;">' + escapeHtml(postText) + '</p>';
-    html += '<a href="' + escapeHtml(postLink) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="margin-top: 1rem;">See original post</a>';
+    if (caption) {
+      html += '<p style="font-size: 1.05rem; line-height: 1.7; white-space: pre-line;">' + escapeHtml(truncate(caption, 700)) + '</p>';
+    }
+    html += '<a href="' + escapeHtml(post.permalink) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="margin-top: 1rem;">See original post</a>';
     html += '</div>';
     html += '</div>';
 
-    var container = document.getElementById('latest-news');
-    if (container) {
-      container.innerHTML = html;
+    container.innerHTML = html;
+  }
+
+  function populateInstagramFeed(posts) {
+    var container = document.getElementById('instagram-feed');
+    if (!container) return;
+
+    var withImages = posts.filter(function (post) { return post.image; });
+    if (!withImages.length) {
+      removeEl('instagram-feed-loading');
+      showEl('instagram-feed-fallback');
+      return;
     }
 
-    // Hide the first post from the Curator feed so it's not duplicated
-    postEl.style.display = 'none';
+    removeEl('instagram-feed-loading');
+
+    var html = '';
+    withImages.forEach(function (post) {
+      var caption = cleanCaption(post.caption);
+      var alt = truncate(caption, 100) || 'Instagram post from Triffid Explorers';
+
+      html += '<a class="instagram-post" href="' + escapeHtml(post.permalink) + '" target="_blank" rel="noopener noreferrer">';
+      html += '  <img src="' + escapeHtml(post.image) + '" alt="' + escapeHtml(alt) + '" loading="lazy">';
+      if (post.mediaType === 'VIDEO') {
+        html += '  <span class="instagram-post-type" aria-label="Video">▶</span>';
+      }
+      if (caption) {
+        html += '  <span class="instagram-post-caption">' + escapeHtml(truncate(caption, 140)) + '</span>';
+      }
+      html += '</a>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  // Instagram is unreachable (or not set up yet) — show the hand-written news
+  // card and point people at the profile rather than leaving empty sections.
+  function showSocialFallback() {
+    removeEl('latest-news-loading');
+    showEl('latest-news-fallback');
+    removeEl('instagram-feed-loading');
+    showEl('instagram-feed-fallback');
   }
 });
