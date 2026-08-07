@@ -2,20 +2,29 @@
 // Netlify Blobs that keeps the site going when the API isn't there.
 //
 // Setup lives in docs/instagram-feed.md. The short version: INSTAGRAM_ACCESS_TOKEN
-// holds a long-lived Instagram token. Meta doesn't refresh those on its own and
-// they lapse after 60 days, so the scheduled sync refreshes it as it goes.
+// holds a Meta token — ideally a Business system user one, which never expires.
 //
 // Nothing here is on the critical path for a page view — the homepage reads the
 // blob copy, so a bad day at Instagram shows yesterday's posts rather than none.
 
 import { getStore } from '@netlify/blobs';
 
-const GRAPH_HOST = 'https://graph.instagram.com';
+// Two ways in, and the token itself tells us which one is in play:
+//
+//   Business system user / Page token ("EAA…") — graph.facebook.com, never
+//     expires. This is the setup we want, and it needs no refreshing at all.
+//   Instagram Login token ("IG…")             — graph.instagram.com, lasts 60
+//     days and has to be refreshed on a schedule.
+//
+// Either works; the system user one is just less to go wrong.
+const IG_HOST = 'https://graph.instagram.com';
+const FB_HOST = 'https://graph.facebook.com';
 const GRAPH_VERSION = 'v23.0';
 
 const DATA_STORE = 'social';
 const TOKEN_KEY = 'instagram-token';
 const POSTS_KEY = 'instagram-posts';
+const USER_ID_KEY = 'instagram-user-id';
 
 const MEDIA_STORE = 'instagram-media';
 // Public URL prefix for copied images, served by netlify/functions/instagram-media.js.
@@ -82,6 +91,65 @@ async function getActiveToken() {
   return { token: process.env.INSTAGRAM_ACCESS_TOKEN || '', refreshedAt: null, store };
 }
 
+// Instagram Login issues tokens prefixed "IG"; Facebook Login and Business
+// system users issue "EAA…" ones. They talk to different hosts, and only the
+// Instagram ones expire.
+function isInstagramLoginToken(token) {
+  return typeof token === 'string' && token.startsWith('IG');
+}
+
+// Which Instagram account to read. A system user token can see several Pages, so
+// find the one with an Instagram account attached and remember it.
+async function resolveUserId(token, store) {
+  if (process.env.INSTAGRAM_USER_ID) return process.env.INSTAGRAM_USER_ID;
+  // An Instagram Login token is already scoped to a single account.
+  if (isInstagramLoginToken(token)) return 'me';
+
+  if (store) {
+    try {
+      const cached = await store.get(USER_ID_KEY, { type: 'json' });
+      if (cached && cached.id) return cached.id;
+    } catch (error) {
+      // Fall through and look it up again.
+    }
+  }
+
+  const url = new URL(`${FB_HOST}/${GRAPH_VERSION}/me/accounts`);
+  url.searchParams.set('fields', 'name,instagram_business_account{id,username}');
+  url.searchParams.set('access_token', token);
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || `Could not list Pages (${response.status})`);
+  }
+
+  const page = (data.data || []).find((p) => p.instagram_business_account?.id);
+  if (!page) {
+    throw new Error(
+      'No Instagram Business account is linked to a Page this token can see. Check the ' +
+        'system user has the Page and Instagram account assigned in Business settings.',
+    );
+  }
+
+  const id = page.instagram_business_account.id;
+
+  if (store) {
+    try {
+      await store.setJSON(USER_ID_KEY, {
+        id,
+        username: page.instagram_business_account.username || '',
+        page: page.name || '',
+      });
+    } catch (error) {
+      // Caching the lookup is a nicety, not a requirement.
+    }
+  }
+
+  return id;
+}
+
 function isRefreshDue(refreshedAt) {
   if (!refreshedAt) return true;
   const age = Date.now() - Date.parse(refreshedAt);
@@ -96,12 +164,14 @@ export async function refreshAccessToken({ force = false } = {}) {
   const { token, refreshedAt, store } = await getActiveToken();
 
   if (!token) throw new Error('INSTAGRAM_ACCESS_TOKEN is not set');
+  // Business system user and Page tokens don't expire — nothing to do.
+  if (!isInstagramLoginToken(token)) return null;
   // Without somewhere to persist the result, refreshing would just throw the new
   // token away and burn the old one's refresh window.
   if (!store) return null;
   if (!force && !isRefreshDue(refreshedAt)) return null;
 
-  const url = new URL(`${GRAPH_HOST}/refresh_access_token`);
+  const url = new URL(`${IG_HOST}/refresh_access_token`);
   url.searchParams.set('grant_type', 'ig_refresh_token');
   url.searchParams.set('access_token', token);
 
@@ -164,8 +234,10 @@ export async function fetchRecentPosts(limit = 12) {
   const active = await getActiveToken();
   if (!active.token) throw new Error('INSTAGRAM_ACCESS_TOKEN is not set');
 
-  const userId = process.env.INSTAGRAM_USER_ID || 'me';
-  const url = new URL(`${GRAPH_HOST}/${GRAPH_VERSION}/${userId}/media`);
+  const userId = await resolveUserId(active.token, active.store);
+  const host = isInstagramLoginToken(active.token) ? IG_HOST : FB_HOST;
+
+  const url = new URL(`${host}/${GRAPH_VERSION}/${userId}/media`);
   url.searchParams.set('fields', MEDIA_FIELDS);
   url.searchParams.set('limit', String(limit));
   url.searchParams.set('access_token', active.token);

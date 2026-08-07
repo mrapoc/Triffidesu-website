@@ -35,46 +35,80 @@ depend on Instagram staying up:
 ## One-off setup
 
 You need an Instagram **Business** or **Creator** account (switch in the
-Instagram app under Settings → Account type). Personal accounts can't use the
-API.
+Instagram app under Settings → Account type), linked to our Facebook Page.
+Personal accounts can't use the API.
+
+There are two ways to get a token. **Use the system user one** — it never
+expires, so there's nothing to maintain afterwards.
+
+### Recommended: a Business system user token (never expires)
+
+This needs the Instagram account and Facebook Page to be in our Meta Business
+portfolio, which they are if they show up in Business Suite.
 
 1. Go to <https://developers.facebook.com/apps> and create an app of type
-   **Business**.
-2. Add the **Instagram** product and choose **API setup with Instagram login**.
-3. Under **Generate access tokens**, connect the `triffidesu` Instagram account
-   and generate a token. Make sure the `instagram_business_basic` permission is
-   included.
-4. Copy the generated long-lived token.
-5. In Netlify: **Site configuration → Environment variables → Add a variable**
+   **Business**, owned by our business portfolio.
+2. Open **Business settings** at <https://business.facebook.com/settings> →
+   **Users → System users → Add**. Name it something like `website-feed` and give
+   it the **Employee** role.
+3. With the system user selected, click **Add assets** and assign:
+   - the Facebook Page, with **Full control**
+   - the Instagram account, with **Full control**
+   - the app from step 1
+4. Click **Generate new token**, pick the app, set expiry to **Never**, and tick
+   the permissions `instagram_basic`, `pages_show_list` and
+   `pages_read_engagement`.
+5. Copy the token — this is the only time it's shown.
 
-   | Key | Value |
-   | --- | --- |
-   | `INSTAGRAM_ACCESS_TOKEN` | the token from step 4 |
+Because we're only reading our own Page and Instagram account, this works under
+Standard Access and doesn't need App Review.
 
-   `INSTAGRAM_USER_ID` is optional — leave it unset and the function uses
-   whichever account the token belongs to.
-6. Redeploy the site (Deploys → Trigger deploy) so the functions pick up the new
-   variable.
+### Alternative: an Instagram Login token (expires every 60 days)
 
-The first nightly sync copies everything across. To not wait for it, run the sync
-by hand once from **Site configuration → Functions → instagram-sync**, or with
-`netlify functions:invoke instagram-sync`. Either way the site works in the
-meantime via the live fallback.
+If the system user route isn't available, add the **Instagram** product to the
+app, choose **API setup with Instagram login**, connect the `triffidesu`
+account, and generate a long-lived token with `instagram_business_basic`.
 
-## Keeping the token alive
+This works fine — the nightly sync refreshes it automatically (see below) — it's
+just more moving parts.
 
-Instagram long-lived tokens expire after 60 days, and Meta doesn't refresh them
-for you — something has to call the refresh endpoint on a schedule. A lapsed
-token is the usual reason a feed like this quietly stops updating.
+### Then, either way
 
-The nightly sync handles it: once the live token is more than a week old it's
-exchanged for a fresh 60-day one, which is a wide margin either way. Refreshed
+In Netlify: **Site configuration → Environment variables → Add a variable**
+
+| Key | Value |
+| --- | --- |
+| `INSTAGRAM_ACCESS_TOKEN` | the token you generated |
+
+`INSTAGRAM_USER_ID` is optional. With a system user token the code finds the
+Instagram account attached to our Page by itself and remembers it; set the
+variable only to pin a specific account.
+
+Redeploy the site (Deploys → Trigger deploy) so the functions pick up the
+variable. The first nightly sync copies everything across — to not wait, run it
+by hand from **Site configuration → Functions → instagram-sync**, or with
+`netlify functions:invoke instagram-sync`. The site works in the meantime via the
+live fallback.
+
+## About the token
+
+The code works out which kind of token it has from the token itself: Instagram
+Login issues `IG…` tokens, while Facebook Login and system users issue `EAA…`
+ones. They use different API hosts, and only the Instagram ones expire.
+
+**System user token (`EAA…`)** — no expiry, nothing to refresh, nothing to do.
+It survives password changes and isn't tied to anyone's personal account. It can
+still be invalidated deliberately, by removing the system user, its asset
+assignments, or the app.
+
+**Instagram Login token (`IG…`)** — expires 60 days after it was last refreshed,
+and Meta won't refresh it for you. The nightly sync exchanges it for a fresh
+60-day token once it's more than a week old, which is a wide margin. Refreshed
 tokens are stored in Netlify Blobs (store `social`, key `instagram-token`) and
 take precedence over the environment variable, so `INSTAGRAM_ACCESS_TOKEN` is
-only used until the first refresh. There's nothing to update by hand.
+only read until the first refresh.
 
-If the token is ever revoked outright — the Instagram password changes, or the
-app's permissions are removed — generate a fresh one, update
+If a token is ever revoked outright, generate a fresh one, update
 `INSTAGRAM_ACCESS_TOKEN`, and delete the `instagram-token` blob (Netlify UI:
 **Blobs → social**) so the new variable is picked up.
 
@@ -107,6 +141,8 @@ looks like:
   the failure reason is logged there.
 - A `502` with an `error` field means the token is missing, expired, or lacks the
   right permission, and no copy has ever been stored. The message says which.
+- "No Instagram Business account is linked to a Page this token can see" means the
+  system user is missing an asset assignment — go back to step 3 above.
 
 ## Storage
 
