@@ -63,14 +63,38 @@ portfolio, which they are if they show up in Business Suite.
 Because we're only reading our own Page and Instagram account, this works under
 Standard Access and doesn't need App Review.
 
-### Alternative: an Instagram Login token (expires every 60 days)
+### If there's no business portfolio: a Page access token (also never expires)
 
-If the system user route isn't available, add the **Instagram** product to the
-app, choose **API setup with Instagram login**, connect the `triffidesu`
-account, and generate a long-lived token with `instagram_business_basic`.
+Needs only a Facebook login with **full control of the Page** — no portfolio, and
+no Instagram password. A Page token derived from a long-lived user token has no
+expiry of its own.
 
-This works fine — the nightly sync refreshes it automatically (see below) — it's
-just more moving parts.
+1. Create the app as above; pick any portfolio it offers, or none. The app is
+   just a credential container and gets no access to the Page by itself.
+2. Open the **Graph API Explorer**
+   (<https://developers.facebook.com/tools/explorer/>), select the app, and click
+   **Generate access token**. Grant `instagram_basic`, `pages_show_list` and
+   `pages_read_engagement`, and tick the Scouts Page when asked which to allow.
+3. Copy the short-lived token it gives you and paste it into the **Access Token
+   Debugger** (<https://developers.facebook.com/tools/debug/accesstoken/>). Click
+   **Extend Access Token** at the bottom and copy the long-lived one.
+4. Back in the Explorer, paste the long-lived token into the token box and
+   request `me/accounts`. Find the Scouts Page in the response and copy its
+   `access_token` — that's the Page token, and it's the one to use.
+
+It can still be invalidated by a Facebook password change, removing the app, or
+losing your role on the Page. Meta also expires tokens after roughly 90 days of
+no API activity; the nightly sync counts as activity, so that doesn't bite.
+
+### If neither works: an Instagram Login token (expires every 60 days)
+
+Add the **Instagram** product to the app, choose **API setup with Instagram
+login**, connect the `triffidesu` account and generate a long-lived token with
+`instagram_business_basic`. Needs the Instagram password — or a Facebook login
+that's in the same Accounts Center as the Instagram account.
+
+The nightly sync refreshes this one automatically (see below), so it's still
+hands-off; there are just more moving parts.
 
 ### Then, either way
 
@@ -100,6 +124,10 @@ ones. They use different API hosts, and only the Instagram ones expire.
 It survives password changes and isn't tied to anyone's personal account. It can
 still be invalidated deliberately, by removing the system user, its asset
 assignments, or the app.
+
+**Page token (`EAA…`)** — also no expiry, and treated identically by the code,
+which reads the Instagram link straight off the Page. It is tied to the personal
+account that generated it, so a password change or losing the Page role kills it.
 
 **Instagram Login token (`IG…`)** — expires 60 days after it was last refreshed,
 and Meta won't refresh it for you. The nightly sync exchanges it for a fresh

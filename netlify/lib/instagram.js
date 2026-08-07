@@ -98,8 +98,50 @@ function isInstagramLoginToken(token) {
   return typeof token === 'string' && token.startsWith('IG');
 }
 
-// Which Instagram account to read. A system user token can see several Pages, so
-// find the one with an Instagram account attached and remember it.
+const PAGE_FIELDS = 'name,instagram_business_account{id,username}';
+
+function readLink(page) {
+  if (!page?.instagram_business_account?.id) return null;
+  return {
+    id: page.instagram_business_account.id,
+    username: page.instagram_business_account.username || '',
+    page: page.name || '',
+  };
+}
+
+// Finds the Instagram account behind whichever Facebook token we've been given.
+// A Page token *is* the Page, so it carries the link directly; user and system
+// user tokens see a list of Pages instead, so we look for one with Instagram
+// attached. Trying the cheap single-Page call first covers both.
+async function discoverLink(token) {
+  for (const [path, pick] of [
+    ['me', (data) => readLink(data)],
+    ['me/accounts', (data) => (data.data || []).map(readLink).find(Boolean)],
+  ]) {
+    try {
+      const url = new URL(`${FB_HOST}/${GRAPH_VERSION}/${path}`);
+      url.searchParams.set('fields', PAGE_FIELDS);
+      url.searchParams.set('access_token', token);
+
+      const response = await fetch(url);
+      const data = await response.json();
+      if (!response.ok) continue;
+
+      const link = pick(data);
+      if (link) return link;
+    } catch (error) {
+      // Try the next shape.
+    }
+  }
+
+  throw new Error(
+    'No Instagram Business account is linked to a Page this token can see. Check the ' +
+      'Instagram account is linked to the Facebook Page, and that the token was granted ' +
+      'the instagram_basic and pages_show_list permissions.',
+  );
+}
+
+// Which Instagram account to read, worked out once and remembered.
 async function resolveUserId(token, store) {
   if (process.env.INSTAGRAM_USER_ID) return process.env.INSTAGRAM_USER_ID;
   // An Instagram Login token is already scoped to a single account.
@@ -114,40 +156,17 @@ async function resolveUserId(token, store) {
     }
   }
 
-  const url = new URL(`${FB_HOST}/${GRAPH_VERSION}/me/accounts`);
-  url.searchParams.set('fields', 'name,instagram_business_account{id,username}');
-  url.searchParams.set('access_token', token);
-
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data?.error?.message || `Could not list Pages (${response.status})`);
-  }
-
-  const page = (data.data || []).find((p) => p.instagram_business_account?.id);
-  if (!page) {
-    throw new Error(
-      'No Instagram Business account is linked to a Page this token can see. Check the ' +
-        'system user has the Page and Instagram account assigned in Business settings.',
-    );
-  }
-
-  const id = page.instagram_business_account.id;
+  const link = await discoverLink(token);
 
   if (store) {
     try {
-      await store.setJSON(USER_ID_KEY, {
-        id,
-        username: page.instagram_business_account.username || '',
-        page: page.name || '',
-      });
+      await store.setJSON(USER_ID_KEY, link);
     } catch (error) {
       // Caching the lookup is a nicety, not a requirement.
     }
   }
 
-  return id;
+  return link.id;
 }
 
 function isRefreshDue(refreshedAt) {
