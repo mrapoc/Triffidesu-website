@@ -1,20 +1,29 @@
-// Shared helpers for talking to the Instagram Graph API.
+// Instagram Graph API access, plus the daily copy of posts and images into
+// Netlify Blobs that keeps the site going when the API isn't there.
 //
-// Setup lives in docs/instagram-feed.md. In short: INSTAGRAM_ACCESS_TOKEN holds a
-// long-lived Instagram token. Those expire after 60 days, so we refresh it in the
-// background and keep the fresh copy in Netlify Blobs — that way the feed keeps
-// updating on its own instead of quietly going stale two months from now.
+// Setup lives in docs/instagram-feed.md. The short version: INSTAGRAM_ACCESS_TOKEN
+// holds a long-lived Instagram token. Meta doesn't refresh those on its own and
+// they lapse after 60 days, so the scheduled sync refreshes it as it goes.
+//
+// Nothing here is on the critical path for a page view — the homepage reads the
+// blob copy, so a bad day at Instagram shows yesterday's posts rather than none.
 
 import { getStore } from '@netlify/blobs';
 
 const GRAPH_HOST = 'https://graph.instagram.com';
 const GRAPH_VERSION = 'v23.0';
 
-const TOKEN_STORE = 'social';
+const DATA_STORE = 'social';
 const TOKEN_KEY = 'instagram-token';
+const POSTS_KEY = 'instagram-posts';
 
-// Refresh once the live token is a week old. Tokens last 60 days, so this leaves
-// plenty of margin even if the site goes quiet for a while.
+const MEDIA_STORE = 'instagram-media';
+// Public URL prefix for copied images, served by netlify/functions/instagram-media.js.
+const MEDIA_PATH = '/instagram-media/';
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+// Refresh once the live token is a week old. Tokens last 60 days from each
+// refresh, so a daily sync leaves an enormous margin.
 const REFRESH_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 // Instagram refuses to refresh a token that is less than 24 hours old.
 const MIN_TOKEN_AGE_MS = 25 * 60 * 60 * 1000;
@@ -32,14 +41,21 @@ const MEDIA_FIELDS = [
 ].join(',');
 
 // Blobs are only available when running on Netlify. Everywhere else we fall back
-// to the environment variable, which still works — it just can't self-refresh.
-function getTokenStore() {
+// to the environment variable and live API calls, which still work — they just
+// can't self-refresh or cache.
+function getBlobStore(name, options) {
   try {
-    return getStore({ name: TOKEN_STORE, consistency: 'strong' });
+    return getStore({ name, ...options });
   } catch (error) {
     return null;
   }
 }
+
+// Strong consistency for the token: reading a stale one after a refresh would
+// mean using a token we've already replaced.
+const getDataStore = () => getBlobStore(DATA_STORE, { consistency: 'strong' });
+// Images are immutable once written, so eventual consistency is fine and quicker.
+const getMediaStore = () => getBlobStore(MEDIA_STORE);
 
 async function readStoredToken(store) {
   if (!store) return null;
@@ -54,9 +70,9 @@ async function readStoredToken(store) {
 }
 
 // Prefers the refreshed token we've stored, falling back to the one in the
-// environment (which is what's in play on the very first request after setup).
+// environment (which is what's in play on the very first run after setup).
 async function getActiveToken() {
-  const store = getTokenStore();
+  const store = getDataStore();
   const stored = await readStoredToken(store);
 
   if (stored) {
@@ -143,6 +159,7 @@ function normalisePost(post) {
   };
 }
 
+// Live call to Instagram. Images still point at Instagram's CDN at this stage.
 export async function fetchRecentPosts(limit = 12) {
   const active = await getActiveToken();
   if (!active.token) throw new Error('INSTAGRAM_ACCESS_TOKEN is not set');
@@ -160,9 +177,106 @@ export async function fetchRecentPosts(limit = 12) {
     throw new Error(data?.error?.message || `Instagram API returned ${response.status}`);
   }
 
-  // Piggyback the token top-up on a request we know worked. Failures here are
-  // never fatal — the current token is still good for weeks.
+  return (data.data || []).map(normalisePost).filter(Boolean);
+}
+
+// Copies one post's image into blob storage and returns the URL to serve it
+// from. Instagram's own image URLs are signed and expire, so hot-linking them is
+// only ever a stopgap — if the copy fails we do exactly that for this one post.
+async function cacheImage(media, post) {
+  if (!media || !post.image) return post.image;
+
+  try {
+    // Already copied on an earlier run — post images never change.
+    if (await media.getMetadata(post.id)) return MEDIA_PATH + post.id;
+  } catch (error) {
+    // Fall through and re-download.
+  }
+
+  try {
+    const response = await fetch(post.image);
+    if (!response.ok) return post.image;
+
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    if (!contentType.startsWith('image/')) return post.image;
+
+    const bytes = await response.arrayBuffer();
+    if (!bytes.byteLength || bytes.byteLength > MAX_IMAGE_BYTES) return post.image;
+
+    await media.set(post.id, bytes, { metadata: { contentType } });
+    return MEDIA_PATH + post.id;
+  } catch (error) {
+    return post.image;
+  }
+}
+
+// Drops images for posts that have scrolled out of the window we display.
+async function pruneMedia(media, keepIds) {
+  // An empty keep-list would wipe everything — only ever prune against a real sync.
+  if (!media || !keepIds.length) return;
+
+  try {
+    const keep = new Set(keepIds);
+    const { blobs } = await media.list();
+    await Promise.all(
+      blobs.filter((blob) => !keep.has(blob.key)).map((blob) => media.delete(blob.key)),
+    );
+  } catch (error) {
+    // Tidying is optional; a failure here shouldn't fail the sync.
+  }
+}
+
+// The daily job: pull the latest posts, copy anything new into blob storage and
+// write the manifest the site reads. Throws without touching the stored copy if
+// Instagram is unreachable, so the site keeps serving the last good sync.
+export async function syncPosts(limit = 12) {
+  const posts = await fetchRecentPosts(limit);
+  if (!posts.length) throw new Error('Instagram returned no posts');
+
+  const media = getMediaStore();
+  const store = getDataStore();
+
+  const synced = [];
+  for (const post of posts) {
+    synced.push({ ...post, image: await cacheImage(media, post) });
+  }
+
+  if (store) {
+    await store.setJSON(POSTS_KEY, { syncedAt: new Date().toISOString(), posts: synced });
+  }
+
+  await pruneMedia(media, synced.map((post) => post.id));
+  // Piggyback the token top-up on a run we know worked.
   await refreshAccessToken().catch(() => {});
 
-  return (data.data || []).map(normalisePost).filter(Boolean);
+  return synced;
+}
+
+export async function readCachedPosts() {
+  const store = getDataStore();
+  if (!store) return null;
+
+  try {
+    const cached = await store.get(POSTS_KEY, { type: 'json' });
+    if (!cached || !Array.isArray(cached.posts) || !cached.posts.length) return null;
+    return cached;
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function readCachedImage(id) {
+  const media = getMediaStore();
+  if (!media || !id) return null;
+
+  try {
+    const result = await media.getWithMetadata(id, { type: 'arrayBuffer' });
+    if (!result) return null;
+    return {
+      body: result.data,
+      contentType: (result.metadata && result.metadata.contentType) || 'image/jpeg',
+    };
+  } catch (error) {
+    return null;
+  }
 }
