@@ -1132,10 +1132,17 @@ document.addEventListener('DOMContentLoaded', function () {
   // count (4 on desktop, 2 on mobile) so the last row is never left ragged.
   var TILES_BEFORE_MORE = 8;
 
+  // Captions run long. The featured card shows this much, then hands off to the
+  // lightbox for the rest rather than to Instagram.
+  var FEATURED_CAPTION_LENGTH = 500;
+
   // Corner badges, same visual language Instagram uses: a play arrow for video,
   // stacked cards for a post with more than one photo.
   var BADGE_VIDEO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
   var BADGE_ALBUM = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="13" height="13" rx="2"/><path d="M4 8v11a2 2 0 0 0 2 2h11"/></svg>';
+
+  // Every post we've been given, so the lightbox can open any of them by index.
+  var feedPosts = [];
 
   var newsContainer = document.getElementById('latest-news');
   var feedContainer = document.getElementById('instagram-feed');
@@ -1149,9 +1156,10 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(function (data) {
         var posts = (data && data.posts) || [];
         if (!posts.length) throw new Error('No posts returned');
+        feedPosts = posts;
         populateLatestNews(posts[0]);
         // The featured post leads the news section, so keep it out of the grid.
-        populateInstagramFeed(posts.slice(1));
+        populateInstagramFeed(posts.slice(1), 1);
       })
       .catch(function () {
         showSocialFallback();
@@ -1199,6 +1207,27 @@ document.addEventListener('DOMContentLoaded', function () {
     return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
+  // Instagram captions are plain text with meaning carried by line breaks. Turn
+  // that into real paragraphs, and knock hashtags and @mentions back visually so
+  // the words people actually wrote lead. Escapes first, then adds markup — the
+  // patterns below can't match inside an HTML entity.
+  function renderCaption(caption, maxLength) {
+    var text = cleanCaption(caption);
+    if (!text) return '';
+    if (maxLength) text = truncate(text, maxLength);
+
+    return text
+      .split(/\n\s*\n/)
+      .map(function (para) {
+        var html = escapeHtml(para.trim())
+          .replace(/(^|\s)(#[\wÀ-ɏ]+)/g, '$1<span class="caption-tag">$2</span>')
+          .replace(/(^|\s)(@[\w.]+)/g, '$1<span class="caption-tag">$2</span>')
+          .replace(/\n/g, '<br>');
+        return html ? '<p>' + html + '</p>' : '';
+      })
+      .join('');
+  }
+
   function populateLatestNews(post) {
     var container = document.getElementById('latest-news');
     if (!container) return;
@@ -1217,15 +1246,19 @@ document.addEventListener('DOMContentLoaded', function () {
     var altText = truncate(caption, 100) || 'Latest post from Triffid Explorers';
     var html = '<div class="two-col">';
 
+    var wasTruncated = caption.length > FEATURED_CAPTION_LENGTH;
+
     if (images.length) {
       html += '<div class="two-col-image">';
-      html += '  <img id="latest-news-image" src="' + escapeHtml(images[0]) + '" alt="' + escapeHtml(altText) + '">';
+      html += '  <button type="button" class="news-image-open" aria-label="Open this post">';
+      html += '    <img id="latest-news-image" src="' + escapeHtml(images[0]) + '" alt="' + escapeHtml(altText) + '">';
+      html += '  </button>';
       // A carousel gets its slides as a thumbnail strip under the main image.
       if (images.length > 1) {
         html += '  <div class="news-gallery" role="group" aria-label="Photos from this post">';
         images.forEach(function (src, i) {
           html += '<button type="button" class="news-gallery-thumb' + (i === 0 ? ' is-current' : '') + '"' +
-            ' data-src="' + escapeHtml(src) + '" aria-label="Show photo ' + (i + 1) + ' of ' + images.length + '">' +
+            ' data-src="' + escapeHtml(src) + '" data-slide="' + i + '" aria-label="Show photo ' + (i + 1) + ' of ' + images.length + '">' +
             '<img src="' + escapeHtml(src) + '" alt="" loading="lazy"></button>';
         });
         html += '  </div>';
@@ -1235,16 +1268,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     html += '<div class="two-col-text">';
     if (dateText) {
-      html += '<p style="color: var(--grey); font-size: 0.85rem; margin-bottom: 0.5rem;">' + escapeHtml(dateText) + '</p>';
+      html += '<p class="post-date">' + escapeHtml(dateText) + '</p>';
     }
     if (caption) {
-      html += '<p style="font-size: 1.05rem; line-height: 1.7; white-space: pre-line;">' + escapeHtml(truncate(caption, 700)) + '</p>';
+      html += '<div class="post-caption">' + renderCaption(post.caption, FEATURED_CAPTION_LENGTH) + '</div>';
     }
-    html += '<a href="' + escapeHtml(post.permalink) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="margin-top: 1rem;">See original post</a>';
+    html += '<button type="button" class="btn btn-outline news-read-more">' +
+      (wasTruncated ? 'Read the full post' : 'Open this post') + '</button>';
     html += '</div>';
     html += '</div>';
 
     container.innerHTML = html;
+
+    // The featured post is always index 0 of the feed.
+    container.querySelectorAll('.news-image-open, .news-read-more').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var main = container.querySelector('#latest-news-image');
+        openLightbox(0, parseInt((main && main.getAttribute('data-slide')) || '0', 10));
+      });
+    });
 
     if (images.length > 1) wireNewsGallery(container);
   }
@@ -1259,6 +1301,8 @@ document.addEventListener('DOMContentLoaded', function () {
     thumbs.forEach(function (thumb) {
       thumb.addEventListener('click', function () {
         main.src = thumb.getAttribute('data-src');
+        // Opening the post from here should land on the slide being looked at.
+        main.setAttribute('data-slide', thumb.getAttribute('data-slide') || '0');
         thumbs.forEach(function (other) { other.classList.remove('is-current'); });
         thumb.classList.add('is-current');
       });
@@ -1271,11 +1315,16 @@ document.addEventListener('DOMContentLoaded', function () {
     return post.image ? [post.image] : [];
   }
 
-  function populateInstagramFeed(posts) {
+  function populateInstagramFeed(posts, indexOffset) {
     var container = document.getElementById('instagram-feed');
     if (!container) return;
 
-    var withImages = posts.filter(function (post) { return post.image; });
+    var offset = indexOffset || 0;
+    var withImages = [];
+    posts.forEach(function (post, i) {
+      if (post.image) withImages.push({ post: post, feedIndex: i + offset });
+    });
+
     if (!withImages.length) {
       removeEl('instagram-feed-loading');
       showEl('instagram-feed-fallback');
@@ -1285,13 +1334,15 @@ document.addEventListener('DOMContentLoaded', function () {
     removeEl('instagram-feed-loading');
 
     var html = '';
-    withImages.forEach(function (post, i) {
+    withImages.forEach(function (entry, i) {
+      var post = entry.post;
       var caption = cleanCaption(post.caption);
       var alt = truncate(caption, 100) || 'Instagram post from Triffid Explorers';
       var slides = imagesOf(post).length;
       var extra = i >= TILES_BEFORE_MORE ? ' is-hidden' : '';
 
-      html += '<a class="instagram-post' + extra + '" href="' + escapeHtml(post.permalink) + '" target="_blank" rel="noopener noreferrer">';
+      html += '<a class="instagram-post' + extra + '" data-post="' + entry.feedIndex + '"' +
+        ' href="' + escapeHtml(post.permalink) + '" target="_blank" rel="noopener noreferrer">';
       html += '  <img src="' + escapeHtml(post.image) + '" alt="' + escapeHtml(alt) + '" loading="lazy">';
       if (post.mediaType === 'VIDEO') {
         html += '  <span class="instagram-post-type instagram-post-type--video" aria-label="Video">' + BADGE_VIDEO + '</span>';
@@ -1305,6 +1356,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     container.innerHTML = html;
+
+    container.querySelectorAll('.instagram-post').forEach(function (tile) {
+      tile.addEventListener('click', function (e) {
+        openInPage(e, parseInt(tile.getAttribute('data-post'), 10), 0);
+      });
+    });
 
     if (withImages.length > TILES_BEFORE_MORE) addShowMore(container, withImages.length);
   }
@@ -1325,6 +1382,159 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     container.insertAdjacentElement('afterend', button);
+  }
+
+  // ===== POST LIGHTBOX =====
+  // Opens a post in place rather than sending people off to Instagram. Since we
+  // hold the images and the caption anyway, there's no reason to hand the visit
+  // over — the link out stays, it just stops being the only way to read a post.
+  var lightbox = null;
+  var lightboxPost = null;
+  var lightboxSlide = 0;
+  var lastFocused = null;
+
+  function buildLightbox() {
+    if (lightbox) return lightbox;
+
+    lightbox = document.createElement('div');
+    lightbox.className = 'lightbox';
+    lightbox.setAttribute('role', 'dialog');
+    lightbox.setAttribute('aria-modal', 'true');
+    lightbox.setAttribute('aria-label', 'Post');
+    lightbox.hidden = true;
+    lightbox.innerHTML = [
+      '<div class="lightbox-backdrop" data-close></div>',
+      '<div class="lightbox-panel">',
+      '  <button type="button" class="lightbox-close" data-close aria-label="Close">&times;</button>',
+      '  <div class="lightbox-media">',
+      '    <img class="lightbox-image" src="" alt="">',
+      '    <button type="button" class="lightbox-nav lightbox-prev" aria-label="Previous photo">&#8249;</button>',
+      '    <button type="button" class="lightbox-nav lightbox-next" aria-label="Next photo">&#8250;</button>',
+      '    <div class="lightbox-dots"></div>',
+      '  </div>',
+      '  <div class="lightbox-body">',
+      '    <p class="lightbox-date"></p>',
+      '    <div class="lightbox-caption"></div>',
+      '    <a class="lightbox-source" target="_blank" rel="noopener noreferrer">View on Instagram</a>',
+      '  </div>',
+      '</div>',
+    ].join('');
+
+    document.body.appendChild(lightbox);
+
+    lightbox.addEventListener('click', function (e) {
+      if (e.target.hasAttribute('data-close')) closeLightbox();
+    });
+    lightbox.querySelector('.lightbox-prev').addEventListener('click', function () { moveSlide(-1); });
+    lightbox.querySelector('.lightbox-next').addEventListener('click', function () { moveSlide(1); });
+
+    // Swipe between slides on touch.
+    var startX = null;
+    var media = lightbox.querySelector('.lightbox-media');
+    media.addEventListener('touchstart', function (e) { startX = e.changedTouches[0].clientX; }, { passive: true });
+    media.addEventListener('touchend', function (e) {
+      if (startX === null) return;
+      var dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 40) moveSlide(dx < 0 ? 1 : -1);
+      startX = null;
+    }, { passive: true });
+
+    return lightbox;
+  }
+
+  function openLightbox(postIndex, slideIndex) {
+    var post = feedPosts[postIndex];
+    if (!post) return;
+
+    buildLightbox();
+    lastFocused = document.activeElement;
+    lightboxPost = post;
+
+    var caption = cleanCaption(post.caption);
+    lightbox.querySelector('.lightbox-date').textContent = formatPostDate(post.timestamp);
+    lightbox.querySelector('.lightbox-caption').innerHTML = renderCaption(post.caption);
+    lightbox.querySelector('.lightbox-source').href = post.permalink;
+    lightbox.setAttribute('aria-label', truncate(caption, 80) || 'Post from Triffid Explorers');
+
+    var images = imagesOf(post);
+    var dots = lightbox.querySelector('.lightbox-dots');
+    dots.innerHTML = images.length > 1
+      ? images.map(function (_, i) {
+        return '<button type="button" class="lightbox-dot" data-slide="' + i + '" aria-label="Photo ' + (i + 1) + ' of ' + images.length + '"></button>';
+      }).join('')
+      : '';
+    dots.querySelectorAll('.lightbox-dot').forEach(function (dot) {
+      dot.addEventListener('click', function () { showSlide(parseInt(dot.getAttribute('data-slide'), 10)); });
+    });
+
+    var multiple = images.length > 1;
+    lightbox.querySelector('.lightbox-prev').hidden = !multiple;
+    lightbox.querySelector('.lightbox-next').hidden = !multiple;
+
+    showSlide(slideIndex || 0);
+
+    lightbox.hidden = false;
+    document.body.classList.add('lightbox-open');
+    lightbox.querySelector('.lightbox-close').focus();
+    document.addEventListener('keydown', onLightboxKey);
+  }
+
+  function showSlide(index) {
+    var images = imagesOf(lightboxPost);
+    if (!images.length) return;
+
+    lightboxSlide = (index + images.length) % images.length;
+
+    var img = lightbox.querySelector('.lightbox-image');
+    img.src = images[lightboxSlide];
+    img.alt = truncate(cleanCaption(lightboxPost.caption), 100) || 'Photo from Triffid Explorers';
+
+    lightbox.querySelectorAll('.lightbox-dot').forEach(function (dot, i) {
+      dot.classList.toggle('is-current', i === lightboxSlide);
+    });
+  }
+
+  function moveSlide(step) {
+    showSlide(lightboxSlide + step);
+  }
+
+  function closeLightbox() {
+    if (!lightbox || lightbox.hidden) return;
+    lightbox.hidden = true;
+    document.body.classList.remove('lightbox-open');
+    document.removeEventListener('keydown', onLightboxKey);
+    if (lastFocused && lastFocused.focus) lastFocused.focus();
+  }
+
+  function onLightboxKey(e) {
+    if (e.key === 'Escape') return closeLightbox();
+    if (e.key === 'ArrowLeft') return moveSlide(-1);
+    if (e.key === 'ArrowRight') return moveSlide(1);
+    if (e.key !== 'Tab') return;
+
+    // Keep Tab inside the dialog while it's open.
+    var focusable = [].slice.call(lightbox.querySelectorAll('button, a[href]')).filter(function (el) {
+      return !el.hidden && el.offsetParent !== null;
+    });
+    if (!focusable.length) return;
+
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  // Plain clicks open the post here; the anchor stays a real link so middle
+  // click, ctrl-click and no-JS all still reach Instagram.
+  function openInPage(e, postIndex, slideIndex) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    openLightbox(postIndex, slideIndex);
   }
 
   // Instagram is unreachable (or not set up yet) — show the hand-written news

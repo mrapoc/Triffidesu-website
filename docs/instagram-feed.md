@@ -36,6 +36,27 @@ Post a carousel and every slide is copied, in the order you arranged them.
 Videos and reels show their cover frame with a play badge; playback stays on
 Instagram. Instagram's own limit of ten slides per carousel is also our cap.
 
+## Reading a post without leaving the site
+
+We hold the images and the caption, so there's no reason to hand a visit over to
+Instagram just because someone wants to read a post. Clicking a grid tile — or
+the photo on the featured card — opens the post **in place**: full-size photos,
+arrows and dots for carousels, and the complete caption.
+
+- Arrow keys and swipe move between slides; Escape or a click outside closes it.
+- Focus moves into the dialog and returns to whatever was clicked on close.
+- The tiles are still real links to Instagram underneath, so middle-click,
+  ctrl-click and no-JS all still work. A "View on Instagram" link sits at the
+  bottom of every post — going there is a choice now, not the only route.
+
+Captions render as real paragraphs rather than a single run-on block, with
+hashtags and `@mentions` knocked back visually so the words lead. A trailing
+block of hashtags — the usual Instagram sign-off — is dropped entirely.
+
+The featured card shows the first 500 characters (`FEATURED_CAPTION_LENGTH` in
+`js/main.js`) and then offers **Read the full post**, which opens the same
+dialog rather than sending people away.
+
 ## How much shows
 
 Two separate numbers, deliberately:

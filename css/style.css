@@ -912,6 +912,204 @@ p {
   color: var(--grey);
 }
 
+/* ===== POST TEXT ===== */
+.post-date {
+  color: var(--grey);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.post-caption p {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--grey);
+  margin-bottom: 0.9rem;
+}
+
+.post-caption p:last-child {
+  margin-bottom: 0;
+}
+
+/* Hashtags and @mentions stay legible but stop competing with the words. */
+.caption-tag {
+  color: var(--purple);
+  opacity: 0.75;
+}
+
+.news-image-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* ===== POST LIGHTBOX ===== */
+body.lightbox-open {
+  overflow: hidden;
+}
+
+.lightbox[hidden] {
+  display: none;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.lightbox-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr);
+  width: min(1000px, 100%);
+  max-height: 90vh;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border: none;
+  /* Sits over the white text column on desktop and over the photo on mobile,
+     so it carries its own contrast rather than relying on what's behind it. */
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--white);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-close:hover,
+.lightbox-close:focus-visible {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.lightbox-media {
+  position: relative;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.lightbox-image {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--white);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-nav[hidden] {
+  display: none;
+}
+
+.lightbox-prev { left: 0.6rem; }
+.lightbox-next { right: 0.6rem; }
+
+.lightbox-dots {
+  position: absolute;
+  bottom: 0.8rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.lightbox-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+}
+
+.lightbox-dot.is-current {
+  background: var(--white);
+}
+
+.lightbox-body {
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.lightbox-caption {
+  margin-bottom: 1.5rem;
+}
+
+.lightbox-caption p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--grey);
+  margin-bottom: 0.9rem;
+}
+
+.lightbox-source {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .lightbox {
+    padding: 0;
+  }
+
+  .lightbox-panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100%;
+    max-height: 100vh;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .lightbox-image {
+    max-height: 55vh;
+  }
+
+  .lightbox-body {
+    padding: 1.25rem;
+  }
+}
+
 /* Thumbnail strip under the featured post, for carousels */
 .news-gallery {
   display: flex;
