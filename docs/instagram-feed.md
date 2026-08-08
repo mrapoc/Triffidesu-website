@@ -11,14 +11,69 @@ is deliberate: the previous setup used Curator.io, and when that stopped syncing
 the site went stale with no way to tell.
 
 1. **`netlify/functions/instagram-sync.js`** runs every night at 05:00 UTC. It
-   fetches our twelve most recent posts, downloads each image, and stores both
-   the images and the post details in Netlify Blobs.
+   fetches our most recent posts, downloads every image — including each slide
+   of a multi-photo post — and stores the images and post details in Netlify
+   Blobs.
 2. **`netlify/functions/instagram.js`** hands that stored copy to the homepage as
    JSON. Instagram isn't involved in a page view at all.
 3. **`netlify/functions/instagram-media.js`** serves the copied images from
-   `/instagram-media/<post id>`, cached hard at the edge.
+   `/instagram-media/<post id>-<slide>`, cached hard at the edge.
 4. **`js/main.js`** renders the newest post as the featured **Latest News** card
-   and the next eight as the **Latest Adventures** grid.
+   and the rest as the **Latest Adventures** grid.
+
+## Multi-photo posts
+
+Post a carousel and every slide is copied, in the order you arranged them.
+
+- **In the grid**, the post appears once, showing its first photo with a
+  stacked-cards badge in the corner so people can see there's more. Clicking
+  goes to the post on Instagram. One post is always one tile — a ten-photo
+  carousel never floods the grid.
+- **On the featured card**, all the slides appear as a thumbnail strip under the
+  main photo. Clicking a thumbnail swaps the main image. It works from the
+  keyboard too.
+
+Videos and reels show their cover frame with a play badge; playback stays on
+Instagram. Instagram's own limit of ten slides per carousel is also our cap.
+
+## Reading a post without leaving the site
+
+We hold the images and the caption, so there's no reason to hand a visit over to
+Instagram just because someone wants to read a post. Clicking a grid tile — or
+the photo on the featured card — opens the post **in place**: full-size photos,
+arrows and dots for carousels, and the complete caption.
+
+- Arrow keys and swipe move between slides; Escape or a click outside closes it.
+- Focus moves into the dialog and returns to whatever was clicked on close.
+- The tiles are still real links to Instagram underneath, so middle-click,
+  ctrl-click and no-JS all still work. A "View on Instagram" link sits at the
+  bottom of every post — going there is a choice now, not the only route.
+
+Captions render as real paragraphs rather than a single run-on block, with
+hashtags and `@mentions` knocked back visually so the words lead. A trailing
+block of hashtags — the usual Instagram sign-off — is dropped entirely.
+
+The featured card shows the first 500 characters (`FEATURED_CAPTION_LENGTH` in
+`js/main.js`) and then offers **Read the full post**, which opens the same
+dialog rather than sending people away.
+
+## How much shows
+
+Two separate numbers, deliberately:
+
+| What | Where | Default |
+| --- | --- | --- |
+| How many posts are **kept** | `INSTAGRAM_POST_LIMIT` env var in Netlify | 12 |
+| How many grid tiles show **before "Show more"** | `TILES_BEFORE_MORE` in `js/main.js` | 8 |
+
+The grid shows the first eight, then a **Show more posts** button reveals the
+rest. Everything is already in the JSON, so expanding costs no extra request.
+
+Eight is a multiple of the grid's column count — four across on desktop, two on
+mobile — so the last row is never left ragged. If you change it, a multiple of
+four keeps that tidy. To hold more history, set `INSTAGRAM_POST_LIMIT` in Netlify
+(anything above 50 is capped); no redeploy needed beyond the usual one for an
+environment variable change.
 
 Because the posts and images are copied rather than linked, the site doesn't
 depend on Instagram staying up:
@@ -151,10 +206,11 @@ looks like:
     {
       "id": "17912…",
       "caption": "…",
-      "image": "/instagram-media/17912…",
+      "image": "/instagram-media/17912…-0",
+      "images": ["/instagram-media/17912…-0", "/instagram-media/17912…-1"],
       "permalink": "https://www.instagram.com/p/…",
       "timestamp": "2026-03-12T18:04:11+0000",
-      "mediaType": "IMAGE"
+      "mediaType": "CAROUSEL_ALBUM"
     }
   ],
   "syncedAt": "2026-03-13T05:00:04.120Z",
@@ -174,6 +230,7 @@ looks like:
 
 ## Storage
 
-Twelve images at a time, pruned on each sync as older posts drop out of the
+A dozen posts' worth of images at a time — more if they're carousels — pruned on
+each sync as older posts drop out of the
 window, so the blob store stays at a few megabytes. Worth a glance at Netlify's
 current free-tier Blobs allowance if the post limit is ever raised a lot.

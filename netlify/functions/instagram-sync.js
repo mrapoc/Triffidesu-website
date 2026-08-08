@@ -11,7 +11,7 @@ import { syncPosts } from '../lib/instagram.js';
 
 export default async () => {
   try {
-    const posts = await syncPosts(12);
+    const posts = await syncPosts();
 
     console.log(`Instagram sync: stored ${posts.length} posts.`);
     return new Response('synced', { status: 200 });

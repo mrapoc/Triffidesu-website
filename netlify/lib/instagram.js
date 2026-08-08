@@ -30,6 +30,19 @@ const MEDIA_STORE = 'instagram-media';
 // Public URL prefix for copied images, served by netlify/functions/instagram-media.js.
 const MEDIA_PATH = '/instagram-media/';
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+// Instagram's own ceiling for a carousel.
+const MAX_CAROUSEL_IMAGES = 10;
+
+// How many posts to keep. Raise INSTAGRAM_POST_LIMIT in Netlify to hold more
+// history; the homepage decides separately how many of them to show at once.
+const DEFAULT_POST_LIMIT = 12;
+const MAX_POST_LIMIT = 50;
+
+export function postLimit() {
+  const configured = parseInt(process.env.INSTAGRAM_POST_LIMIT || '', 10);
+  if (!Number.isFinite(configured) || configured < 1) return DEFAULT_POST_LIMIT;
+  return Math.min(configured, MAX_POST_LIMIT);
+}
 
 // Refresh once the live token is a week old. Tokens last 60 days from each
 // refresh, so a daily sync leaves an enormous margin.
@@ -212,36 +225,41 @@ export async function refreshAccessToken({ force = false } = {}) {
   return record.expiresAt;
 }
 
-function pickImage(post) {
+// A still image for one item, whatever kind it is. Videos and reels only ever
+// give us a poster frame — playback stays on Instagram.
+function stillFor(item) {
+  return item.media_type === 'VIDEO'
+    ? item.thumbnail_url || item.media_url || ''
+    : item.media_url || item.thumbnail_url || '';
+}
+
+// Every image belonging to a post, in the order they appear on Instagram. A
+// carousel gives one per slide; everything else gives exactly one.
+function pickImages(post) {
   if (post.media_type === 'CAROUSEL_ALBUM') {
-    // Album parents don't carry their own media_url — use the first child.
+    // Album parents carry no media of their own — it all hangs off the children.
     const children = (post.children && post.children.data) || [];
-    const child = children.find((c) => c.media_url || c.thumbnail_url);
-    if (child) {
-      return child.media_type === 'VIDEO'
-        ? child.thumbnail_url || child.media_url || ''
-        : child.media_url || child.thumbnail_url || '';
-    }
+    return children.map(stillFor).filter(Boolean).slice(0, MAX_CAROUSEL_IMAGES);
   }
 
-  if (post.media_type === 'VIDEO') {
-    return post.thumbnail_url || post.media_url || '';
-  }
-
-  return post.media_url || post.thumbnail_url || '';
+  const still = stillFor(post);
+  return still ? [still] : [];
 }
 
 function normalisePost(post) {
-  const image = pickImage(post);
+  const images = pickImages(post);
   const caption = (post.caption || '').trim();
 
   // Nothing to show without at least a picture or some words.
-  if (!image && !caption) return null;
+  if (!images.length && !caption) return null;
 
   return {
     id: post.id,
     caption,
-    image,
+    // `image` is the one the grid shows; `images` is every slide, for the
+    // gallery on the featured card.
+    image: images[0] || '',
+    images,
     permalink: post.permalink || 'https://www.instagram.com/triffidesu/',
     timestamp: post.timestamp || '',
     mediaType: post.media_type || 'IMAGE',
@@ -271,43 +289,55 @@ export async function fetchRecentPosts(limit = 12) {
   return (data.data || []).map(normalisePost).filter(Boolean);
 }
 
-// Copies one post's image into blob storage and returns the URL to serve it
-// from. Instagram's own image URLs are signed and expire, so hot-linking them is
-// only ever a stopgap — if the copy fails we do exactly that for this one post.
-async function cacheImage(media, post) {
-  if (!media || !post.image) return post.image;
+// One blob per image: "<post id>-<slide number>".
+const blobKey = (postId, index) => `${postId}-${index}`;
+
+// Copies one image into blob storage and returns the URL to serve it from.
+// Instagram's own URLs are signed and expire, so hot-linking them is only ever a
+// stopgap — if the copy fails we do exactly that for this one image.
+async function cacheImage(media, key, remoteUrl) {
+  if (!media || !remoteUrl) return remoteUrl;
 
   try {
-    // Already copied on an earlier run — post images never change.
-    if (await media.getMetadata(post.id)) return MEDIA_PATH + post.id;
+    // Already copied on an earlier run — a post's images never change.
+    if (await media.getMetadata(key)) return MEDIA_PATH + key;
   } catch (error) {
     // Fall through and re-download.
   }
 
   try {
-    const response = await fetch(post.image);
-    if (!response.ok) return post.image;
+    const response = await fetch(remoteUrl);
+    if (!response.ok) return remoteUrl;
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
-    if (!contentType.startsWith('image/')) return post.image;
+    if (!contentType.startsWith('image/')) return remoteUrl;
 
     const bytes = await response.arrayBuffer();
-    if (!bytes.byteLength || bytes.byteLength > MAX_IMAGE_BYTES) return post.image;
+    if (!bytes.byteLength || bytes.byteLength > MAX_IMAGE_BYTES) return remoteUrl;
 
-    await media.set(post.id, bytes, { metadata: { contentType } });
-    return MEDIA_PATH + post.id;
+    await media.set(key, bytes, { metadata: { contentType } });
+    return MEDIA_PATH + key;
   } catch (error) {
-    return post.image;
+    return remoteUrl;
   }
 }
 
+// Copies every slide of a post, in order.
+async function cacheImages(media, post) {
+  const copied = [];
+  for (const [index, remoteUrl] of post.images.entries()) {
+    copied.push(await cacheImage(media, blobKey(post.id, index), remoteUrl));
+  }
+  return copied;
+}
+
 // Drops images for posts that have scrolled out of the window we display.
-async function pruneMedia(media, keepIds) {
+async function pruneMedia(media, keepKeys) {
   // An empty keep-list would wipe everything — only ever prune against a real sync.
-  if (!media || !keepIds.length) return;
+  if (!media || !keepKeys.length) return;
 
   try {
-    const keep = new Set(keepIds);
+    const keep = new Set(keepKeys);
     const { blobs } = await media.list();
     await Promise.all(
       blobs.filter((blob) => !keep.has(blob.key)).map((blob) => media.delete(blob.key)),
@@ -320,7 +350,7 @@ async function pruneMedia(media, keepIds) {
 // The daily job: pull the latest posts, copy anything new into blob storage and
 // write the manifest the site reads. Throws without touching the stored copy if
 // Instagram is unreachable, so the site keeps serving the last good sync.
-export async function syncPosts(limit = 12) {
+export async function syncPosts(limit = postLimit()) {
   const posts = await fetchRecentPosts(limit);
   if (!posts.length) throw new Error('Instagram returned no posts');
 
@@ -328,15 +358,19 @@ export async function syncPosts(limit = 12) {
   const store = getDataStore();
 
   const synced = [];
+  const keepKeys = [];
+
   for (const post of posts) {
-    synced.push({ ...post, image: await cacheImage(media, post) });
+    const images = await cacheImages(media, post);
+    synced.push({ ...post, image: images[0] || '', images });
+    post.images.forEach((_, index) => keepKeys.push(blobKey(post.id, index)));
   }
 
   if (store) {
     await store.setJSON(POSTS_KEY, { syncedAt: new Date().toISOString(), posts: synced });
   }
 
-  await pruneMedia(media, synced.map((post) => post.id));
+  await pruneMedia(media, keepKeys);
   // Piggyback the token top-up on a run we know worked.
   await refreshAccessToken().catch(() => {});
 
