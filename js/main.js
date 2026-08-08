@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function renderProgramme(events, container) {
     if (events.length === 0) {
-      container.innerHTML = '<p style="text-align:center; color: var(--grey);">No upcoming events &mdash; check back soon!</p>';
+      container.innerHTML = '<p style="text-align:center; color: var(--grey);">No upcoming events. check back soon!</p>';
       return;
     }
 
@@ -597,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }, 4000);
       setTimeout(function () {
         line2.style.opacity = '1';
-        // This one is a secret bonus — doesn't count toward the 7
+        // This one is a secret bonus and doesn't count toward the 7
         if (!found67) {
           found67 = true;
           var bonusToast = document.createElement('div');
@@ -638,7 +638,7 @@ document.addEventListener('DOMContentLoaded', function () {
           photoClicks.found = true;
           surpriseFound('Gravity!');
         }
-        // Photos fall then reset — on mobile only drop visible ones
+        // Photos fall then reset; on mobile only drop visible ones
         var photos = document.querySelectorAll('.activity-photo');
         var visiblePhotos = [];
         photos.forEach(function (p) {
@@ -797,7 +797,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Hero (join page)
         ['Looking for Things to Do in', 'Nothing to Do in'],
         ['bored of the same old routine, we get it', 'bored of the same old routine, same'],
-        ['not just sitting around', 'not just doomscrolling'],
+        ['not sitting around', 'not just doomscrolling'],
         ['See What We Do', 'Peep the Vibes'],
         ['How to Join', 'How to Lock In'],
 
@@ -805,7 +805,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ['Done the', 'Done the'],
         ['Proper', 'Sigma'],
         ['Real hiking. Real camping. Real adventure.', 'Real hiking. Real camping. Real main character energy.'],
-        ['cheaper than school and done the way it should be', 'cheaper than school and actually bussin'],
+        ['Cheaper than school and done the way it should be', 'cheaper than school and actually bussin'],
         ['Start Your DofE', 'Unlock Your DofE Arc'],
         ['Why Choose Us?', 'Why We\'re Built Different'],
 
@@ -834,7 +834,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ['You\'ll get wet. That\'s the point.', 'You\'ll get wet. That\'s the whole vibe.'],
         ['sleeping under the stars (or clouds', 'sleeping under the stars (or clouds'],
         ['Helmets on, chalk up, and send it.', 'Helmets on, chalk up, and absolutely send it.'],
-        ['we fit in as many bigger activities as we can', 'we fit in as many bangers as we can'],
+        ['We fit in as many bigger activities as we can', 'we fit in as many bangers as we can'],
         ['even more fun', 'even more W\'s'],
         ['Stage 4 Emergency Aid training', 'Stage 4 Emergency Aid training (we ate that)'],
         ['The evening sessions hit different.', 'The evening sessions hit different fr fr.'],
@@ -849,7 +849,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ['Our leaders won the Leaders\' League in 2025', 'Our leaders won the Leaders\' League in 2025 (they\'re lowkey cracked)'],
         ['very competitive about defending the title', 'very competitive about defending the title (it\'s giving obsession)'],
         ['Stuff that\'s useful in real life.', 'Stuff that\'s useful IRL.'],
-        ['you\'ll meet people from different schools', 'you\'ll meet people from different schools'],
+        ['You\'ll meet people from different schools', 'you\'ll meet people from different schools'],
         ['It looks great on a CV', 'It looks great on a CV (trust)'],
         ['Teamwork, initiative, resilience', 'Teamwork, initiative, resilience'],
         ['gaming nights on the projector, wide games in the woods', 'gaming nights on the projector (bussin), wide games in the woods'],
@@ -897,7 +897,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // CTA
         ['Ready for an Adventure?', 'You Tryna Join or Nah?'],
         ['there\'s a place for you', 'there\'s a vibe for you'],
-        ['no commitment, just come and see what we\'re about', 'no cap, just come vibe and see if we pass the vibe check'],
+        ['No commitment, just come and see what we\'re about', 'no cap, just come vibe and see if we pass the vibe check'],
         ['Email Us', 'Slide Into Our Inbox'],
         ['Turn up on a Monday at 7pm. That\'s it.', 'Just turn up on a Monday at 7pm. That\'s literally it.'],
         ['Info for Parents', 'Lore for the Parentals'],
@@ -909,7 +909,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ['Looking for activities for teenagers in Ludlow? This is it.', 'Looking for activities for teenagers in Ludlow? You found it. W.'],
         ['What to expect', 'The Vibes to Expect'],
         ['How to join', 'How to Lock In'],
-        ['no need to book, just turn up', 'no need to book, just rock up'],
+        ['No need to book, just turn up', 'no need to book, just rock up'],
         ['no pressure', 'zero pressure, we promise'],
         ['they\'re part of the team', 'they\'re locked in. Let\'s go.'],
         ['Safeguarding', 'Safeguarding (Serious Bit)'],
@@ -967,7 +967,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ['Heard a Few Things About Us?', 'Heard the Tea About Us?'],
         ['we\'re a loud bunch', 'we\'re a loud bunch fr'],
         ['The hut is still standing.', 'The hut is somehow still standing.'],
-        ['if you\'re someone who wants a bit more energy and a bit more freedom', 'if you want main character energy and freedom'],
+        ['If you\'re someone who wants a bit more energy and a bit more freedom', 'if you want main character energy and freedom'],
         ['You\'ll know in twenty minutes.', 'You\'ll catch the vibe in twenty minutes.'],
         ['But I won\'t know anyone.', 'But I won\'t know anyone bestie.'],
         ['Neither did most of us at first.', 'Neither did most of us at first. We got u.'],
@@ -980,7 +980,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ['What about Scouts?', 'What about Scouts tho?'],
         ['It\'s not either/or.', 'It\'s not either/or. You can stack both.'],
         ['Don\'t take our word for it', 'Don\'t take our word for it bestie'],
-        ['have a look at the live programme', 'peep the live programme'],
+        ['Have a look at the live programme', 'peep the live programme'],
         ['Some recent and upcoming flavour', 'Some recent W\'s and upcoming bangers'],
         ['Real rock, not a leisure-centre wall. Helmets on, chalk up, send it.', 'Real rock, not some leisure-centre wall. Helmets on, chalk up, absolutely send it.'],
         ['Real camping, cook your own food, sleep under the stars', 'Real camping, cook your own food, sleep under the stars (peak)'],
@@ -1008,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ['Explorers isn\'t school', 'Explorers Isn\'t School (Different Vibe)'],
         ['It\'s two hours on a Monday night.', 'Just two hours on a Monday night.'],
         ['Not a school club, not on any school radar', 'Not a school club, not on any school radar fr'],
-        ['a different group of people, doing actual outdoor stuff, on your own time', 'a different group of people, doing actual outdoor stuff, on your own time fr'],
+        ['A different group of people, doing actual outdoor stuff, on your own time', 'a different group of people, doing actual outdoor stuff, on your own time fr'],
         ['Three Mondays free', 'Three Mondays Free (No Cap)'],
         ['Three sessions, no money, no sign-up, no awkward chat.', 'Three sessions, no money, no sign-up, zero awkward chat.'],
         ['Turn up, see what it is, walk away at any point if you don\'t fancy it.', 'Pull up, see what it is, dip at any point if you\'re not feeling it.'],
@@ -1055,7 +1055,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // === Bring a Mate referral section (homepage) ===
         ['Already an Explorer? Bring a Mate.', 'Already an Explorer? Tag a Mate In.'],
-        ['help us grow the unit', 'help us stack the roster'],
+        ['Help us grow the unit', 'help us stack the roster'],
         ['You know what we\'re like better than any leader does.', 'You know what we\'re like better than any leader does fr.'],
         ['Send via WhatsApp', 'WhatsApp'],
         ['Send via Text', 'Text'],
@@ -1134,7 +1134,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // We keep about a year of posts so the activity tags below always have
   // something recent to show. The homepage grid deliberately doesn't grow with
-  // it — "Show more" tops out here rather than unrolling the whole archive.
+  // it. "Show more" tops out here rather than unrolling the whole archive.
   var MAX_GRID_TILES = 16;
 
   // Tiles in a tagged strip, e.g. the DofE page. One row, no expander.
@@ -1209,7 +1209,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Alt text for a photo. Captions carry the page's SEO weight now that images
-  // live on our own domain, but a caption of "🔥🔥" describes nothing — fall
+  // live on our own domain, but a caption of "🔥🔥" describes nothing, so fall
   // back to something honest rather than pass emoji to a screen reader.
   function altFor(post, fallback) {
     var caption = cleanCaption(post.caption);
@@ -1235,7 +1235,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Instagram captions are plain text with meaning carried by line breaks. Turn
   // that into real paragraphs, and knock hashtags and @mentions back visually so
-  // the words people actually wrote lead. Escapes first, then adds markup — the
+  // the words people wrote lead. Escapes first, then adds markup: the
   // patterns below can't match inside an HTML entity.
   function renderCaption(caption, maxLength) {
     var text = cleanCaption(caption);
@@ -1395,7 +1395,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (withImages.length > TILES_BEFORE_MORE) addShowMore(container, withImages.length);
   }
 
-  // Everything is already downloaded, so revealing the rest is instant — no
+  // Everything is already downloaded, so revealing the rest is instant: no
   // second request, and no wall of photos before anyone asks for one.
   function addShowMore(container, total, extraClass) {
     var button = document.createElement('button');
@@ -1420,12 +1420,12 @@ document.addEventListener('DOMContentLoaded', function () {
   //   <img data-tag="camp">              the newest matching photo replaces this
   //   <div class="tag-feed" data-tag="dofe">   a short row of recent matches
   //
-  // Nothing matching means nothing changes — the static photo stays, and an
+  // Nothing matching means nothing changes. The static photo stays, and an
   // empty strip removes itself. A tag nobody has used yet is harmless.
 
   // Posts already showing somewhere on this page. A post tagged "#camp #hike"
   // matches two activity cards, and the newest post of all is usually both the
-  // featured card and somebody's newest tagged match — without this the same
+  // featured card and somebody's newest tagged match. Without this the same
   // photo turns up twice in one eyeful and reads as a bug.
   var claimedPosts = [];
 
@@ -1439,13 +1439,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function postsWithTag(tagList) {
     var wanted = (tagList || '').toLowerCase().split(/[\s,]+/).filter(Boolean);
-    // No tag asked for means "whatever's newest" — how the recruitment pages
+    // No tag asked for means "whatever's newest", which is how the recruitment pages
     // show recent activity without caring what it was.
     if (!wanted.length) return feedPosts.slice();
 
     var patterns = wanted.map(function (tag) {
       var bare = tag.replace(/^#/, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // \b so #camp doesn't also pull in #camping — tags stay predictable.
+      // \b so #camp doesn't also pull in #camping, keeping tags predictable.
       return new RegExp('#' + bare + '\\b');
     });
 
@@ -1466,7 +1466,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Swaps a fixed illustrative photo for the newest real one on that theme. The
   // box is a fixed height in CSS, so this costs no layout shift and no extra
-  // page length — the card just stops being from three years ago.
+  // page length. The card just stops being from three years ago.
   function refreshTaggedImage(img) {
     var matches = postsWithTag(img.getAttribute('data-tag'));
     var post = null;
@@ -1488,7 +1488,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // A section marked data-tag-section exists only to show its strip, so it goes
-  // too — otherwise a tag nobody has used leaves a heading standing over
+  // too, otherwise a tag nobody has used leaves a heading standing over
   // nothing. Sections with their own content just lose the strip.
   function dropTagFeed(container) {
     var section = container.closest('[data-tag-section]');
@@ -1502,7 +1502,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Prefer posts not already shown elsewhere on the page, but a short row
-    // would be more obvious than a repeat — so fall back to the plain
+    // would be more obvious than a repeat, so fall back to the plain
     // chronological pick rather than leaving gaps. Either branch keeps order.
     var unclaimed = candidates.filter(function (post) { return !isClaimed(post); });
     var matches = (unclaimed.length >= wanted ? unclaimed : candidates).slice(0, wanted);
@@ -1558,7 +1558,7 @@ document.addEventListener('DOMContentLoaded', function () {
     renderGallery('');
   }
 
-  // Only offer a filter if it actually matches something — an activity we
+  // Only offer a filter that matches something: an activity we
   // haven't photographed yet shouldn't be a button that leads nowhere.
   function buildGalleryFilters() {
     var bar = document.getElementById('gallery-filters');
@@ -1629,7 +1629,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ===== POST LIGHTBOX =====
   // Opens a post in place rather than sending people off to Instagram. Since we
   // hold the images and the caption anyway, there's no reason to hand the visit
-  // over — the link out stays, it just stops being the only way to read a post.
+  // over. The link out stays, it just stops being the only way to read a post.
   var lightbox = null;
   var lightboxPost = null;
   var lightboxSlide = 0;
@@ -1779,7 +1779,7 @@ document.addEventListener('DOMContentLoaded', function () {
     openLightbox(postIndex, slideIndex);
   }
 
-  // Instagram is unreachable (or not set up yet) — show the hand-written news
+  // Instagram is unreachable (or not set up yet), so show the hand-written news
   // card and point people at the profile rather than leaving empty sections.
   function showSocialFallback() {
     removeEl('latest-news-loading');
