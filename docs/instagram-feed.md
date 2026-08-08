@@ -112,6 +112,24 @@ newest posts whatever they're about** — that's how the "What We've Been Up To
 Lately" strips on `join.html` and `bring-a-mate.html` work, so a visitor arriving
 from a search sees a unit that was doing things last month.
 
+### The same photo never appears twice in one place
+
+A post tagged `#camp #hike` matches two activity cards, and the newest post of
+all is usually both the featured news card and somebody's newest tagged match.
+Left alone that puts the same photo on screen twice, which reads as a bug.
+
+So each part of a page claims what it uses, and later parts pick something else:
+
+- The **featured news card** claims the newest post first.
+- **Tagged photos** take the newest match nobody has claimed. If every match is
+  already on screen, the card keeps its original photo — better than the same
+  shot twice.
+- **Strips** prefer unclaimed posts, but fall back to the plain chronological
+  pick rather than showing a short row, since a gap is more obvious than a
+  repeat.
+
+The **gallery page** is exempt: it's meant to show everything.
+
 ### Rules worth knowing
 
 - **Multiple tags are an OR.** `data-tag="kayak paddle water"` matches any of them.

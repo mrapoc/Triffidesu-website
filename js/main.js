@@ -1267,6 +1267,9 @@ document.addEventListener('DOMContentLoaded', function () {
     removeEl('latest-news-loading');
     removeEl('latest-news-fallback');
 
+    // The lead story owns this post; tagged cards below will pick something else.
+    claim(post);
+
     var images = imagesOf(post);
     var dateText = formatPostDate(post.timestamp);
     var altText = altFor(post, 'Latest post from Triffid Explorers');
@@ -1420,6 +1423,20 @@ document.addEventListener('DOMContentLoaded', function () {
   // Nothing matching means nothing changes — the static photo stays, and an
   // empty strip removes itself. A tag nobody has used yet is harmless.
 
+  // Posts already showing somewhere on this page. A post tagged "#camp #hike"
+  // matches two activity cards, and the newest post of all is usually both the
+  // featured card and somebody's newest tagged match — without this the same
+  // photo turns up twice in one eyeful and reads as a bug.
+  var claimedPosts = [];
+
+  function claim(post) {
+    if (post && claimedPosts.indexOf(post.id) === -1) claimedPosts.push(post.id);
+  }
+
+  function isClaimed(post) {
+    return !!post && claimedPosts.indexOf(post.id) !== -1;
+  }
+
   function postsWithTag(tagList) {
     var wanted = (tagList || '').toLowerCase().split(/[\s,]+/).filter(Boolean);
     // No tag asked for means "whatever's newest" — how the recruitment pages
@@ -1454,10 +1471,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var matches = postsWithTag(img.getAttribute('data-tag'));
     var post = null;
     for (var i = 0; i < matches.length; i++) {
-      if (matches[i].image) { post = matches[i]; break; }
+      if (matches[i].image && !isClaimed(matches[i])) { post = matches[i]; break; }
     }
+
+    // Nothing left that isn't already on screen. The original photo beats
+    // showing the same shot twice, so leave the card alone.
     if (!post) return;
 
+    claim(post);
     var index = indexOfPost(post);
     img.src = post.image;
     img.classList.add('is-live');
@@ -1476,9 +1497,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function fillTagFeed(container) {
     var wanted = parseInt(container.getAttribute('data-count'), 10) || TAG_FEED_TILES;
-    var matches = postsWithTag(container.getAttribute('data-tag')).filter(function (post) {
+    var candidates = postsWithTag(container.getAttribute('data-tag')).filter(function (post) {
       return post.image;
-    }).slice(0, wanted);
+    });
+
+    // Prefer posts not already shown elsewhere on the page, but a short row
+    // would be more obvious than a repeat — so fall back to the plain
+    // chronological pick rather than leaving gaps. Either branch keeps order.
+    var unclaimed = candidates.filter(function (post) { return !isClaimed(post); });
+    var matches = (unclaimed.length >= wanted ? unclaimed : candidates).slice(0, wanted);
+    matches.forEach(claim);
 
     // Better no section than an empty one.
     if (!matches.length) {
