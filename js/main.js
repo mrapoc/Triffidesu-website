@@ -165,8 +165,16 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function renderProgramme(events, container) {
+    // Between terms this is empty for weeks at a time, and it sits on the page
+    // most likely to be someone's first visit. Say why, and give them the same
+    // way in they'd get anywhere else, rather than leaving a dead end.
     if (!events.length) {
-      container.innerHTML = '<p class="programme-empty">Nothing listed just yet. Check back soon, or drop us an email.</p>';
+      container.innerHTML =
+        '<div class="programme-empty">' +
+        '<p><strong>Nothing listed at the moment.</strong> We run in term time, so the calendar goes quiet over the holidays and fills up again once we are back on Mondays.</p>' +
+        '<p>Email us and we will tell you exactly when we start again, and sort you a night to come along.</p>' +
+        '<a class="btn" href="mailto:hello@triffidesu.co.uk?subject=When%20do%20you%20start%20back%3F">Arrange a visit <span class="arrow" aria-hidden="true">&rarr;</span></a>' +
+        '</div>';
       return;
     }
 
