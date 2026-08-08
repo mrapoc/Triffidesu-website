@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.triffidesu.co.uk/</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-08-08</lastmod>
   </url>
   <url>
     <loc>https://www.triffidesu.co.uk/gallery.html</loc>
@@ -10,7 +10,11 @@
   </url>
   <url>
     <loc>https://www.triffidesu.co.uk/dofe.html</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-08-08</lastmod>
+  </url>
+  <url>
+    <loc>https://www.triffidesu.co.uk/badges.html</loc>
+    <lastmod>2026-08-08</lastmod>
   </url>
   <url>
     <loc>https://www.triffidesu.co.uk/support.html</loc>
@@ -18,14 +22,18 @@
   </url>
   <url>
     <loc>https://www.triffidesu.co.uk/join.html</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-08-08</lastmod>
   </url>
   <url>
     <loc>https://www.triffidesu.co.uk/moving-up.html</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-08-08</lastmod>
   </url>
   <url>
     <loc>https://www.triffidesu.co.uk/bring-a-mate.html</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-08-08</lastmod>
+  </url>
+  <url>
+    <loc>https://www.triffidesu.co.uk/privacy.html</loc>
+    <lastmod>2026-08-08</lastmod>
   </url>
 </urlset>

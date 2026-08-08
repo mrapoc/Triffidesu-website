@@ -80,83 +80,82 @@ that leads nowhere. Forty photos show initially, then **Show all photos**.
 The **Gallery** link in the site navigation points here. It used to point at the
 homepage's `#social` strip.
 
-## Hashtags: putting posts where they belong
+## Where a post lands on the site
 
-Hashtag a post on Instagram and it turns up in the matching place on the site.
-No admin, no upload — the tag you were already adding does the work.
+Post to Instagram and the photo turns up in the matching place on the site. No
+admin, no upload, no hashtag discipline required.
 
-### The two ways to use it
+**The plain-English version for whoever runs the social account is
+[hashtags.md](hashtags.md).** This section is the mechanics.
 
-**Refresh a fixed photo.** Add `data-tag` to any `<img>` and the newest matching
-photo replaces it:
+### How matching works
+
+Each topic in `TOPICS` (near the top of `js/main.js`) is a list of words. A post
+belongs to a topic if any of those words appears in its caption. Hashes are
+stripped before matching, so `#kayak` and `kayaking` are the same thing, and a
+trailing `s` is ignored. Matching is case-insensitive and uses word boundaries,
+so `camp` does not also match `campaign`.
+
+That means a caption written in normal English routes itself. Nobody has to
+remember a tag vocabulary.
+
+### The two ways to ask for content
+
+**Refresh a fixed photo.** Add `data-topic` to any `<img>` and the newest
+matching photo replaces it:
 
 ```html
-<img src="images/fire.jpg" data-tag="camp bushcraft" class="activity-photo" alt="…">
+<img src="images/fire.jpg" data-topic="camping" class="activity-photo" alt="…">
 ```
 
-The six activity cards on the homepage work this way. The box is a fixed height
-in CSS, so the photo changes but the page doesn't move or get any longer.
-Clicking one opens the post.
+The six activity cards on the homepage work this way. The box is a fixed aspect
+ratio in CSS, so the photo changes but the page doesn't move.
 
 **Add a short strip.** A row of recent matches, for a page about one thing:
 
 ```html
 <section class="section" id="dofe-recent" data-tag-section>
-  <div class="section-header"><h2>DofE in Action</h2></div>
-  <div class="tag-feed instagram-grid" data-tag="dofe expedition" data-count="4" hidden></div>
+  <div class="section-header">…</div>
+  <div class="tag-feed instagram-grid" data-topic="dofe" data-count="4" hidden></div>
 </section>
 ```
 
-The DofE page has one of these. **Leave `data-tag` off entirely and you get the
-newest posts whatever they're about** — that's how the "What We've Been Up To
-Lately" strips on `join.html` and `bring-a-mate.html` work, so a visitor arriving
-from a search sees a unit that was doing things last month.
+**Leave the topic off entirely and you get the newest posts whatever they are**,
+which is how the strips on `join.html` and `support.html` work.
+
+`data-tag="kayak paddle"` still works for a one-off that doesn't deserve a topic;
+it is matched the same way, just without the synonym list.
 
 ### The same photo never appears twice in one place
 
-A post tagged `#camp #hike` matches two activity cards, and the newest post of
-all is usually both the featured news card and somebody's newest tagged match.
-Left alone that puts the same photo on screen twice, which reads as a bug.
-
-So each part of a page claims what it uses, and later parts pick something else:
+Each part of a page claims what it uses, and later parts pick something else:
 
 - The **featured news card** claims the newest post first.
-- **Tagged photos** take the newest match nobody has claimed. If every match is
-  already on screen, the card keeps its original photo — better than the same
-  shot twice.
+- **Topic photos** take the newest match nobody has claimed. If every match is
+  already on screen, the card keeps its original photo.
 - **Strips** prefer unclaimed posts, but fall back to the plain chronological
-  pick rather than showing a short row, since a gap is more obvious than a
-  repeat.
+  pick rather than showing a short row.
 
-The **gallery page** is exempt: it's meant to show everything.
+The **gallery page** is exempt: it is meant to show everything.
 
-### Rules worth knowing
+### Nothing matching is safe
 
-- **Multiple tags are an OR.** `data-tag="kayak paddle water"` matches any of them.
-- **Tags match whole words.** `#camp` will not match `#camping`. Pick one and
-  stay consistent, or list both.
-- **Case doesn't matter.** `#Camp` and `#camp` are the same tag.
-- **Nothing matching is safe.** A `data-tag` image keeps its original photo. A
-  strip removes itself — and if its section is marked `data-tag-section`, the
-  whole section goes, so you never get a heading standing over nothing. A tag
-  nobody has used yet simply does nothing until someone uses it.
+A `data-topic` image keeps its original photo. A strip removes itself, and if its
+section is marked `data-tag-section`, the whole section goes, so you never get a
+heading standing over nothing.
 
-### Tags currently in use
+### Checking the routing
 
-| Where | Tags |
-| --- | --- |
-| Hiking, Cycling & Expeditions | `#hike` `#cycle` `#expedition` |
-| Camping & Bushcraft | `#camp` `#bushcraft` |
-| Kayaking & Water Sports | `#kayak` `#paddle` `#water` |
-| Community Service | `#service` `#community` `#remembrance` |
-| Wide Games & Evenings | `#widegames` `#gamesnight` `#evening` |
-| Big Days Out & More | `#daysout` `#climbing` `#karting` `#paintball` |
-| DofE page strip | `#dofe` `#expedition` |
-| Gallery filter chips | as above, one chip per activity |
-| join / bring-a-mate strips | none — newest posts, whatever they are |
+Add `?tags=check` to any page and the console prints a table of the last 20
+posts, the topics each one matched, and a count of any that matched nothing.
 
-These are a starting guess. Changing one is a one-attribute edit in the HTML —
-there's no list to keep in sync elsewhere.
+### Topics currently defined
+
+`hiking`, `camping`, `water`, `service`, `games`, `daysout`, `dofe`, `skills`.
+
+Changing one is a one-line edit to `TOPICS`. There is no list to keep in sync
+anywhere else — the gallery filter buttons, the activity cards and the strips all
+read from it.
 
 ## How much shows
 

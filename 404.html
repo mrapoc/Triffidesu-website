@@ -4,54 +4,126 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Page Not Found | Triffid Explorer Scouts</title>
-  <meta name="robots" content="noindex">
+  <meta name="description" content="That page has wandered off. Head back to the Triffid Explorer Scouts homepage.">
+  <meta name="robots" content="noindex, follow">
+
   <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800;6..12,900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
   <header class="site-header" role="banner">
-    <div class="container">
-      <nav class="nav-wrapper" aria-label="Main navigation">
-        <a href="index.html" class="nav-logo">
-          <img src="images/triffid%20logo.png" alt="Triffid Explorer Scouts logo" onerror="this.style.display='none'">
-          <span>Triffid Explorers</span>
-        </a>
-        <ul class="nav-links" id="navLinks">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="index.html#activities">Activities</a></li>
-          <li><a href="dofe.html">Duke of Edinburgh</a></li>
-          <li><a href="gallery.html">Gallery</a></li>
-          <li><a href="moving-up.html">Moving Up</a></li>
-          <li><a href="support.html">Support Us</a></li>
-          <li><a href="index.html#join" class="btn btn-primary nav-cta">Join Us</a></li>
-        </ul>
-        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
-          <span></span><span></span><span></span>
-        </button>
-      </nav>
-    </div>
+    <span class="necker" aria-hidden="true"></span>
+    <nav class="nav-wrapper" aria-label="Main navigation">
+      <a href="index.html" class="nav-logo">
+        <img src="images/triffid%20logo.png" alt="Triffid Explorer Scouts logo" width="46" height="46">
+        <span>Triffid Explorers</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#activities">Activities</a></li>
+        <li><a href="index.html#programme">Programme</a></li>
+        <li><a href="dofe.html">Duke of Edinburgh</a></li>
+        <li><a href="badges.html">Badges</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="moving-up.html">Moving Up</a></li>
+        <li><a href="support.html">Support Us</a></li>
+        <li><a href="join.html" class="nav-cta">Join Us</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
   </header>
 
-  <section class="hero" style="min-height: 60vh; display: flex; align-items: center;">
-    <div class="container" style="text-align: center;">
-      <h1>Looks like you've gone off trail!</h1>
-      <p class="subtitle" style="margin-bottom: 2rem;">The page you're looking for doesn't exist. Maybe it got lost on an expedition.</p>
-      <p style="color: var(--grey); font-size: 0.85rem; margin-bottom: 1.5rem;">Since you're already exploring off the beaten track... there are 4 hidden clues on the homepage. Find them all and you might unlock something unexpected.</p>
-      <div class="hero-buttons" style="justify-content: center;">
-        <a href="index.html" class="btn btn-primary">Back to Base Camp</a>
-        <a href="dofe.html" class="btn btn-outline">Duke of Edinburgh</a>
+  <main id="main">
+    <section class="section error-page">
+      <div class="container container-narrow">
+        <div class="section-header is-centred" style="margin-bottom: var(--space-7);">
+          <span class="eyebrow">Error 404</span>
+          <span class="necker-rule" aria-hidden="true"></span>
+          <h1 class="display-2">Navigation error</h1>
+          <p class="lede">This page isn't where the map said it would be. Happens on expedition too. Here's the way back.</p>
+          <div class="row" style="justify-content: center;">
+            <a href="index.html" class="btn btn-lg">Back to the homepage <span class="arrow" aria-hidden="true">&rarr;</span></a>
+            <a href="mailto:hello@triffidesu.co.uk" class="btn btn-lg btn-outline">Email us</a>
+          </div>
+        </div>
+
+        <div class="step-grid">
+          <div class="step-col">
+            <h3><a href="join.html">Join us</a></h3>
+            <p>Mondays 7&ndash;9pm at Ludlow Scout Hut. Email us and we'll arrange a first visit.</p>
+          </div>
+          <div class="step-col">
+            <h3><a href="dofe.html">Duke of Edinburgh</a></h3>
+            <p>Bronze, Silver and Gold from &pound;33.50. We're a licensed DofE centre.</p>
+          </div>
+          <div class="step-col">
+            <h3><a href="gallery.html">Gallery</a></h3>
+            <p>Camps, expeditions and big days out, photographed by us.</p>
+          </div>
+          <div class="step-col">
+            <h3><a href="badges.html">Badges</a></h3>
+            <p>All 51 Explorer activity badges, and how we work through them.</p>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <footer class="site-footer" role="contentinfo">
-    <div class="container">
-      <div class="footer-bottom" style="border-top: none;">
-        <p>&copy; 2026 Triffid Explorer Scouts. Part of <a href="https://www.scouts.org.uk" target="_blank" rel="noopener noreferrer" style="color: rgba(255,255,255,0.7);">The Scout Association</a>.</p>
-        <p style="margin-top: 0.5rem;">Website by <a href="https://fresh-tech.uk" target="_blank" rel="noopener noreferrer" style="color: rgba(255,255,255,0.7);">Fresh Tech</a></p>
+    <span class="necker necker-on-dark" aria-hidden="true"></span>
+    <div class="footer-grid">
+      <div class="footer-about">
+        <img src="images/triffid%20logo.png" alt="Triffid Explorer Scouts" class="footer-logo" width="64" height="64">
+        <h3>Triffid Explorer Scouts</h3>
+        <p>Adventure, teamwork, and memories that last. Explorer Scouts in Ludlow for 14&ndash;18 year olds.</p>
+        <div class="social-links">
+          <a href="https://www.facebook.com/triffidesu" target="_blank" rel="noopener noreferrer">Facebook</a>
+          <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer">Instagram</a>
+        </div>
+      </div>
+      <div>
+        <h4>Quick links</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="index.html#activities">Activities</a></li>
+          <li><a href="index.html#programme">Programme</a></li>
+          <li><a href="dofe.html">Duke of Edinburgh</a></li>
+          <li><a href="badges.html">Badges</a></li>
+          <li><a href="join.html">Join Us</a></li>
+          <li><a href="moving-up.html">Moving Up from Scouts</a></li>
+          <li><a href="bring-a-mate.html">Bring a Mate</a></li>
+          <li><a href="support.html">Support Us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact us</h4>
+        <ul>
+          <li><a href="https://www.google.com/maps?gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOTIICAEQABgWGB4yDQgCEAAYhgMYgAQYigUyCggDEAAYgAQYogQyCAgEEOkHGPxV0gEIMjExMGowajGoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=uk&sa=X&geocode=KZfWk3lManBIMe-bzw5wwnfV&daddr=Station+Dr,+Ludlow+SY8+2PQ" target="_blank" rel="noopener noreferrer">Ludlow Scout Hut</a></li>
+          <li>Station Drive, Ludlow</li>
+          <li>Shropshire SY8 2PQ</li>
+          <li><a href="mailto:hello@triffidesu.co.uk">hello@triffidesu.co.uk</a></li>
+          <li>Mondays 7&ndash;9pm</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <p>&copy; 2026 Triffid Explorer Scouts. Part of <a href="https://www.scouts.org.uk" target="_blank" rel="noopener noreferrer">The Scout Association</a>. <a href="privacy.html">Privacy and photographs</a>. Website by <a href="https://fresh-tech.uk" target="_blank" rel="noopener noreferrer">Fresh Tech</a>.</p>
+        <!-- POR 2e.2.7.4: the official Scouts logo, localised with the unit name beneath. -->
+        <span class="scouts-lockup">
+          <img src="images/scouts/scouts-logo-stacked-white.png" alt="Scouts" width="74" height="54" loading="lazy">
+          <span>Triffid Explorer Scout Unit</span>
+        </span>
       </div>
     </div>
   </footer>
