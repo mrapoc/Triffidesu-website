@@ -902,6 +902,18 @@ p {
   display: none;
 }
 
+/* A tagged strip is one row, however wide the screen is. */
+.tag-feed[hidden] {
+  display: none;
+}
+
+/* Sized rather than stretched, and centred, so a tag with only two matches
+   still looks deliberate instead of leaving half a row empty. */
+.tag-feed {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 240px));
+  justify-content: center;
+}
+
 .instagram-more {
   display: block;
   margin: 2rem auto 0;
