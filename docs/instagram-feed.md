@@ -57,17 +57,76 @@ The featured card shows the first 500 characters (`FEATURED_CAPTION_LENGTH` in
 `js/main.js`) and then offers **Read the full post**, which opens the same
 dialog rather than sending people away.
 
+## Hashtags: putting posts where they belong
+
+Hashtag a post on Instagram and it turns up in the matching place on the site.
+No admin, no upload — the tag you were already adding does the work.
+
+### The two ways to use it
+
+**Refresh a fixed photo.** Add `data-tag` to any `<img>` and the newest matching
+photo replaces it:
+
+```html
+<img src="images/fire.jpg" data-tag="camp bushcraft" class="activity-photo" alt="…">
+```
+
+The six activity cards on the homepage work this way. The box is a fixed height
+in CSS, so the photo changes but the page doesn't move or get any longer.
+Clicking one opens the post.
+
+**Add a short strip.** A row of recent matches, for a page about one thing:
+
+```html
+<section class="section" id="dofe-recent" data-tag-section>
+  <div class="section-header"><h2>DofE in Action</h2></div>
+  <div class="tag-feed instagram-grid" data-tag="dofe expedition" data-count="4" hidden></div>
+</section>
+```
+
+The DofE page has one of these.
+
+### Rules worth knowing
+
+- **Multiple tags are an OR.** `data-tag="kayak paddle water"` matches any of them.
+- **Tags match whole words.** `#camp` will not match `#camping`. Pick one and
+  stay consistent, or list both.
+- **Case doesn't matter.** `#Camp` and `#camp` are the same tag.
+- **Nothing matching is safe.** A `data-tag` image keeps its original photo. A
+  strip removes itself — and if its section is marked `data-tag-section`, the
+  whole section goes, so you never get a heading standing over nothing. A tag
+  nobody has used yet simply does nothing until someone uses it.
+
+### Tags currently in use
+
+| Where | Tags |
+| --- | --- |
+| Hiking, Cycling & Expeditions | `#hike` `#cycle` `#expedition` |
+| Camping & Bushcraft | `#camp` `#bushcraft` |
+| Kayaking & Water Sports | `#kayak` `#paddle` `#water` |
+| Community Service | `#service` `#community` `#remembrance` |
+| Wide Games & Evenings | `#widegames` `#gamesnight` `#evening` |
+| Big Days Out & More | `#daysout` `#climbing` `#karting` `#paintball` |
+| DofE page strip | `#dofe` `#expedition` |
+
+These are a starting guess. Changing one is a one-attribute edit in the HTML —
+there's no list to keep in sync elsewhere.
+
 ## How much shows
 
 Two separate numbers, deliberately:
 
 | What | Where | Default |
 | --- | --- | --- |
-| How many posts are **kept** | `INSTAGRAM_POST_LIMIT` env var in Netlify | 12 |
+| How many posts are **kept** | `INSTAGRAM_POST_LIMIT` env var in Netlify | 48 |
+| Most grid tiles the homepage will ever show | `MAX_GRID_TILES` in `js/main.js` | 16 |
 | How many grid tiles show **before "Show more"** | `TILES_BEFORE_MORE` in `js/main.js` | 8 |
+| Tiles in a tagged strip | `data-count` on the strip | 4 |
 
-The grid shows the first eight, then a **Show more posts** button reveals the
-rest. Everything is already in the JSON, so expanding costs no extra request.
+We keep about a year of posts so the activity tags always have something recent
+to pull from. The homepage deliberately doesn't grow with that: the grid shows
+eight, **Show more posts** takes it to sixteen, and the rest of the archive stays
+available to tagged sections without ever landing on the front page.
 
 Eight is a multiple of the grid's column count — four across on desktop, two on
 mobile — so the last row is never left ragged. If you change it, a multiple of

@@ -1132,6 +1132,14 @@ document.addEventListener('DOMContentLoaded', function () {
   // count (4 on desktop, 2 on mobile) so the last row is never left ragged.
   var TILES_BEFORE_MORE = 8;
 
+  // We keep about a year of posts so the activity tags below always have
+  // something recent to show. The homepage grid deliberately doesn't grow with
+  // it — "Show more" tops out here rather than unrolling the whole archive.
+  var MAX_GRID_TILES = 16;
+
+  // Tiles in a tagged strip, e.g. the DofE page. One row, no expander.
+  var TAG_FEED_TILES = 4;
+
   // Captions run long. The featured card shows this much, then hands off to the
   // lightbox for the rest rather than to Instagram.
   var FEATURED_CAPTION_LENGTH = 500;
@@ -1146,8 +1154,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var newsContainer = document.getElementById('latest-news');
   var feedContainer = document.getElementById('instagram-feed');
+  // Inner pages have no feed sections, only tagged photos and strips.
+  var hasTagged = document.querySelector('[data-tag]');
 
-  if (newsContainer || feedContainer) {
+  if (newsContainer || feedContainer || hasTagged) {
     fetch('/.netlify/functions/instagram')
       .then(function (res) {
         if (!res.ok) throw new Error('Instagram feed unavailable');
@@ -1157,12 +1167,15 @@ document.addEventListener('DOMContentLoaded', function () {
         var posts = (data && data.posts) || [];
         if (!posts.length) throw new Error('No posts returned');
         feedPosts = posts;
-        populateLatestNews(posts[0]);
+        if (newsContainer) populateLatestNews(posts[0]);
         // The featured post leads the news section, so keep it out of the grid.
-        populateInstagramFeed(posts.slice(1), 1);
+        if (feedContainer) populateInstagramFeed(posts.slice(1, 1 + MAX_GRID_TILES), 1);
+        populateTagged();
       })
       .catch(function () {
         showSocialFallback();
+        // Static photos stay as they are; drop any strip that can't be filled.
+        document.querySelectorAll('.tag-feed[data-tag]').forEach(dropTagFeed);
       });
   }
 
@@ -1382,6 +1395,104 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     container.insertAdjacentElement('afterend', button);
+  }
+
+  // ===== TAGGED CONTENT =====
+  // Hashtag a post on Instagram and it turns up in the matching place on the
+  // site. Two ways to ask for it, both declarative so a page needs no JS:
+  //
+  //   <img data-tag="camp">              the newest matching photo replaces this
+  //   <div class="tag-feed" data-tag="dofe">   a short row of recent matches
+  //
+  // Nothing matching means nothing changes — the static photo stays, and an
+  // empty strip removes itself. A tag nobody has used yet is harmless.
+
+  function postsWithTag(tagList) {
+    var wanted = (tagList || '').toLowerCase().split(/[\s,]+/).filter(Boolean);
+    if (!wanted.length) return [];
+
+    var patterns = wanted.map(function (tag) {
+      var bare = tag.replace(/^#/, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // \b so #camp doesn't also pull in #camping — tags stay predictable.
+      return new RegExp('#' + bare + '\\b');
+    });
+
+    return feedPosts.filter(function (post) {
+      var caption = (post.caption || '').toLowerCase();
+      return patterns.some(function (pattern) { return pattern.test(caption); });
+    });
+  }
+
+  function indexOfPost(post) {
+    return feedPosts.indexOf(post);
+  }
+
+  function populateTagged() {
+    document.querySelectorAll('img[data-tag]').forEach(refreshTaggedImage);
+    document.querySelectorAll('.tag-feed[data-tag]').forEach(fillTagFeed);
+  }
+
+  // Swaps a fixed illustrative photo for the newest real one on that theme. The
+  // box is a fixed height in CSS, so this costs no layout shift and no extra
+  // page length — the card just stops being from three years ago.
+  function refreshTaggedImage(img) {
+    var matches = postsWithTag(img.getAttribute('data-tag'));
+    var post = null;
+    for (var i = 0; i < matches.length; i++) {
+      if (matches[i].image) { post = matches[i]; break; }
+    }
+    if (!post) return;
+
+    var index = indexOfPost(post);
+    img.src = post.image;
+    img.classList.add('is-live');
+    img.setAttribute('alt', truncate(cleanCaption(post.caption), 100) || img.getAttribute('alt') || '');
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', function () { openLightbox(index, 0); });
+  }
+
+  // A section marked data-tag-section exists only to show its strip, so it goes
+  // too — otherwise a tag nobody has used leaves a heading standing over
+  // nothing. Sections with their own content just lose the strip.
+  function dropTagFeed(container) {
+    var section = container.closest('[data-tag-section]');
+    (section || container).remove();
+  }
+
+  function fillTagFeed(container) {
+    var wanted = parseInt(container.getAttribute('data-count'), 10) || TAG_FEED_TILES;
+    var matches = postsWithTag(container.getAttribute('data-tag')).filter(function (post) {
+      return post.image;
+    }).slice(0, wanted);
+
+    // Better no section than an empty one.
+    if (!matches.length) {
+      dropTagFeed(container);
+      return;
+    }
+
+    container.innerHTML = matches.map(function (post) {
+      var caption = cleanCaption(post.caption);
+      var alt = truncate(caption, 100) || 'Photo from Triffid Explorers';
+      var slides = imagesOf(post).length;
+      var badge = post.mediaType === 'VIDEO'
+        ? '<span class="instagram-post-type instagram-post-type--video" aria-label="Video">' + BADGE_VIDEO + '</span>'
+        : slides > 1
+          ? '<span class="instagram-post-type instagram-post-type--album" aria-label="' + slides + ' photos">' + BADGE_ALBUM + '</span>'
+          : '';
+
+      return '<a class="instagram-post" data-post="' + indexOfPost(post) + '"' +
+        ' href="' + escapeHtml(post.permalink) + '" target="_blank" rel="noopener noreferrer">' +
+        '<img src="' + escapeHtml(post.image) + '" alt="' + escapeHtml(alt) + '" loading="lazy">' +
+        badge + '</a>';
+    }).join('');
+
+    container.hidden = false;
+    container.querySelectorAll('.instagram-post').forEach(function (tile) {
+      tile.addEventListener('click', function (e) {
+        openInPage(e, parseInt(tile.getAttribute('data-post'), 10), 0);
+      });
+    });
   }
 
   // ===== POST LIGHTBOX =====

@@ -30,12 +30,16 @@ const MEDIA_STORE = 'instagram-media';
 // Public URL prefix for copied images, served by netlify/functions/instagram-media.js.
 const MEDIA_PATH = '/instagram-media/';
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const IMAGE_TIMEOUT_MS = 15000;
 // Instagram's own ceiling for a carousel.
 const MAX_CAROUSEL_IMAGES = 10;
 
 // How many posts to keep. Raise INSTAGRAM_POST_LIMIT in Netlify to hold more
 // history; the homepage decides separately how many of them to show at once.
-const DEFAULT_POST_LIMIT = 12;
+// Deep enough that every activity tag has something recent to show — roughly a
+// year of posting. The homepage grid caps itself separately, so a bigger archive
+// here doesn't mean a longer page.
+const DEFAULT_POST_LIMIT = 48;
 const MAX_POST_LIMIT = 50;
 
 export function postLimit() {
@@ -306,7 +310,9 @@ async function cacheImage(media, key, remoteUrl) {
   }
 
   try {
-    const response = await fetch(remoteUrl);
+    // With a year of posts a first sync pulls a few hundred images, so one
+    // stalled download shouldn't be able to hold up the whole run.
+    const response = await fetch(remoteUrl, { signal: AbortSignal.timeout(IMAGE_TIMEOUT_MS) });
     if (!response.ok) return remoteUrl;
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
