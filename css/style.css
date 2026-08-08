@@ -1459,6 +1459,17 @@ body.lightbox-open {
   box-shadow: 0 4px 15px rgba(116, 19, 189, 0.3);
 }
 
+/* Same circle as the initial above, so a leader with a photo and one without
+   still sit level beside each other. */
+.leader-photo {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 15px rgba(116, 19, 189, 0.3);
+}
+
 /* ===== CLS PREVENTION ===== */
 .instagram-feed-area {
   min-height: 400px;
