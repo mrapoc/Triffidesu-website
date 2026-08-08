@@ -329,7 +329,17 @@ async function cacheImage(media, key, remoteUrl) {
 }
 
 // Copies every slide of a post, in order.
-async function cacheImages(media, post) {
+//
+// `alreadyCopied` is the same post from the last manifest. Running hourly, most
+// posts are in it and unchanged, and their images are known to be in storage —
+// so we can trust it rather than asking the blob store about every slide of
+// every post, every hour.
+async function cacheImages(media, post, alreadyCopied) {
+  if (alreadyCopied && alreadyCopied.length === post.images.length) {
+    const allStored = alreadyCopied.every((url) => url.startsWith(MEDIA_PATH));
+    if (allStored) return alreadyCopied;
+  }
+
   const copied = [];
   for (const [index, remoteUrl] of post.images.entries()) {
     copied.push(await cacheImage(media, blobKey(post.id, index), remoteUrl));
@@ -363,11 +373,18 @@ export async function syncPosts(limit = postLimit()) {
   const media = getMediaStore();
   const store = getDataStore();
 
+  // What the last run copied, so an hourly sync only works on what's new.
+  const previous = new Map();
+  const lastSync = await readCachedPosts();
+  if (lastSync) {
+    lastSync.posts.forEach((post) => previous.set(post.id, post.images || []));
+  }
+
   const synced = [];
   const keepKeys = [];
 
   for (const post of posts) {
-    const images = await cacheImages(media, post);
+    const images = await cacheImages(media, post, previous.get(post.id));
     synced.push({ ...post, image: images[0] || '', images });
     post.images.forEach((_, index) => keepKeys.push(blobKey(post.id, index)));
   }

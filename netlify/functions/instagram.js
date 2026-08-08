@@ -9,7 +9,10 @@ import { readCachedPosts, fetchRecentPosts, postLimit } from '../lib/instagram.j
 const CACHE_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
   'Access-Control-Allow-Origin': '*',
-  'Cache-Control': 'public, max-age=1800, stale-while-revalidate=86400',
+  // Short, because the sync runs hourly and a new post shouldn't wait on a
+  // stale edge cache. The revalidate window keeps the feed on screen for a day
+  // if the function itself has a bad moment.
+  'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
 };
 
 export default async () => {

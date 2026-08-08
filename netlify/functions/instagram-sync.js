@@ -22,5 +22,9 @@ export default async () => {
 };
 
 export const config = {
-  schedule: '0 5 * * *',
+  // Hourly. A routine run is one API call and a manifest write — images already
+  // copied are recognised from the previous manifest and never re-fetched — so
+  // the cost of checking often is close to nothing, and a Monday evening post is
+  // on the site the same evening.
+  schedule: '0 * * * *',
 };
