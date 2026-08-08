@@ -907,6 +907,60 @@ p {
   display: none;
 }
 
+/* ===== GALLERY PAGE ===== */
+.gallery-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.gallery-filters[hidden] {
+  display: none;
+}
+
+.gallery-filters button {
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--grey-light);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--grey);
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.gallery-filters button:hover,
+.gallery-filters button:focus-visible {
+  border-color: var(--purple);
+  color: var(--purple);
+}
+
+.gallery-filters button.is-current {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: var(--white);
+}
+
+/* Denser than the homepage strip — this page is the photos. */
+.gallery-grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+@media (max-width: 968px) {
+  .gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* Sized rather than stretched, and centred, so a tag with only two matches
    still looks deliberate instead of leaving half a row empty. */
 .tag-feed {

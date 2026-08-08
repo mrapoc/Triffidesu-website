@@ -1155,7 +1155,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var newsContainer = document.getElementById('latest-news');
   var feedContainer = document.getElementById('instagram-feed');
   // Inner pages have no feed sections, only tagged photos and strips.
-  var hasTagged = document.querySelector('[data-tag]');
+  var hasTagged = document.querySelector('[data-tag], .tag-feed, #gallery-grid');
 
   if (newsContainer || feedContainer || hasTagged) {
     fetch('/.netlify/functions/instagram')
@@ -1171,11 +1171,14 @@ document.addEventListener('DOMContentLoaded', function () {
         // The featured post leads the news section, so keep it out of the grid.
         if (feedContainer) populateInstagramFeed(posts.slice(1, 1 + MAX_GRID_TILES), 1);
         populateTagged();
+        populateGallery();
       })
       .catch(function () {
         showSocialFallback();
+        removeEl('gallery-loading');
+        showEl('gallery-fallback');
         // Static photos stay as they are; drop any strip that can't be filled.
-        document.querySelectorAll('.tag-feed[data-tag]').forEach(dropTagFeed);
+        document.querySelectorAll('.tag-feed').forEach(dropTagFeed);
       });
   }
 
@@ -1203,6 +1206,16 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
     return lines.join('\n').trim();
+  }
+
+  // Alt text for a photo. Captions carry the page's SEO weight now that images
+  // live on our own domain, but a caption of "🔥🔥" describes nothing — fall
+  // back to something honest rather than pass emoji to a screen reader.
+  function altFor(post, fallback) {
+    var caption = cleanCaption(post.caption);
+    return /[a-z]{3}/i.test(caption)
+      ? truncate(caption, 100)
+      : fallback || 'Photo from Triffid Explorers';
   }
 
   function truncate(text, maxLength) {
@@ -1256,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var images = imagesOf(post);
     var dateText = formatPostDate(post.timestamp);
-    var altText = truncate(caption, 100) || 'Latest post from Triffid Explorers';
+    var altText = altFor(post, 'Latest post from Triffid Explorers');
     var html = '<div class="two-col">';
 
     var wasTruncated = caption.length > FEATURED_CAPTION_LENGTH;
@@ -1350,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', function () {
     withImages.forEach(function (entry, i) {
       var post = entry.post;
       var caption = cleanCaption(post.caption);
-      var alt = truncate(caption, 100) || 'Instagram post from Triffid Explorers';
+      var alt = altFor(post, 'Instagram post from Triffid Explorers');
       var slides = imagesOf(post).length;
       var extra = i >= TILES_BEFORE_MORE ? ' is-hidden' : '';
 
@@ -1381,11 +1394,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Everything is already downloaded, so revealing the rest is instant — no
   // second request, and no wall of photos before anyone asks for one.
-  function addShowMore(container, total) {
+  function addShowMore(container, total, extraClass) {
     var button = document.createElement('button');
     button.type = 'button';
-    button.className = 'btn btn-outline instagram-more';
-    button.textContent = 'Show more posts';
+    button.className = 'btn btn-outline instagram-more' + (extraClass ? ' ' + extraClass : '');
+    button.textContent = extraClass === 'gallery-more' ? 'Show all photos' : 'Show more posts';
 
     button.addEventListener('click', function () {
       container.querySelectorAll('.instagram-post.is-hidden').forEach(function (tile) {
@@ -1409,7 +1422,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function postsWithTag(tagList) {
     var wanted = (tagList || '').toLowerCase().split(/[\s,]+/).filter(Boolean);
-    if (!wanted.length) return [];
+    // No tag asked for means "whatever's newest" — how the recruitment pages
+    // show recent activity without caring what it was.
+    if (!wanted.length) return feedPosts.slice();
 
     var patterns = wanted.map(function (tag) {
       var bare = tag.replace(/^#/, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1429,7 +1444,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function populateTagged() {
     document.querySelectorAll('img[data-tag]').forEach(refreshTaggedImage);
-    document.querySelectorAll('.tag-feed[data-tag]').forEach(fillTagFeed);
+    document.querySelectorAll('.tag-feed').forEach(fillTagFeed);
   }
 
   // Swaps a fixed illustrative photo for the newest real one on that theme. The
@@ -1446,7 +1461,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var index = indexOfPost(post);
     img.src = post.image;
     img.classList.add('is-live');
-    img.setAttribute('alt', truncate(cleanCaption(post.caption), 100) || img.getAttribute('alt') || '');
+    img.setAttribute('alt', altFor(post, img.getAttribute('alt')));
     img.style.cursor = 'zoom-in';
     img.addEventListener('click', function () { openLightbox(index, 0); });
   }
@@ -1473,7 +1488,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     container.innerHTML = matches.map(function (post) {
       var caption = cleanCaption(post.caption);
-      var alt = truncate(caption, 100) || 'Photo from Triffid Explorers';
+      var alt = altFor(post, 'Photo from Triffid Explorers');
       var slides = imagesOf(post).length;
       var badge = post.mediaType === 'VIDEO'
         ? '<span class="instagram-post-type instagram-post-type--video" aria-label="Video">' + BADGE_VIDEO + '</span>'
@@ -1493,6 +1508,94 @@ document.addEventListener('DOMContentLoaded', function () {
         openInPage(e, parseInt(tile.getAttribute('data-post'), 10), 0);
       });
     });
+  }
+
+  // ===== GALLERY PAGE =====
+  // Every photo we hold, newest first, flattened so each slide of a carousel is
+  // its own tile. Filters reuse the same tag matching as everywhere else.
+  var GALLERY_PAGE_SIZE = 40;
+
+  function populateGallery() {
+    var grid = document.getElementById('gallery-grid');
+    if (!grid) return;
+
+    removeEl('gallery-loading');
+
+    if (!feedPosts.length) {
+      showEl('gallery-fallback');
+      return;
+    }
+
+    buildGalleryFilters();
+    renderGallery('');
+  }
+
+  // Only offer a filter if it actually matches something — an activity we
+  // haven't photographed yet shouldn't be a button that leads nowhere.
+  function buildGalleryFilters() {
+    var bar = document.getElementById('gallery-filters');
+    if (!bar) return;
+
+    var available = [].slice.call(bar.querySelectorAll('[data-tag]')).filter(function (button) {
+      return postsWithTag(button.getAttribute('data-tag')).length > 0;
+    });
+
+    bar.querySelectorAll('[data-tag]').forEach(function (button) {
+      if (available.indexOf(button) === -1) button.remove();
+    });
+
+    // With nothing to filter by, the bar is just noise.
+    if (!available.length) {
+      bar.remove();
+      return;
+    }
+
+    bar.hidden = false;
+    bar.querySelectorAll('button').forEach(function (button) {
+      button.addEventListener('click', function () {
+        bar.querySelectorAll('button').forEach(function (other) { other.classList.remove('is-current'); });
+        button.classList.add('is-current');
+        renderGallery(button.getAttribute('data-tag') || '');
+      });
+    });
+  }
+
+  function renderGallery(tag) {
+    var grid = document.getElementById('gallery-grid');
+    var matches = postsWithTag(tag);
+
+    // One tile per photo, not per post.
+    var photos = [];
+    matches.forEach(function (post) {
+      var index = indexOfPost(post);
+      imagesOf(post).forEach(function (src, slide) {
+        photos.push({ post: post, index: index, slide: slide, src: src });
+      });
+    });
+
+    var existingMore = document.querySelector('.gallery-more');
+    if (existingMore) existingMore.remove();
+
+    grid.innerHTML = photos.map(function (photo, i) {
+      return '<a class="instagram-post' + (i >= GALLERY_PAGE_SIZE ? ' is-hidden' : '') + '"' +
+        ' data-post="' + photo.index + '" data-slide="' + photo.slide + '"' +
+        ' href="' + escapeHtml(photo.post.permalink) + '" target="_blank" rel="noopener noreferrer">' +
+        '<img src="' + escapeHtml(photo.src) + '" alt="' + escapeHtml(altFor(photo.post)) + '" loading="lazy">' +
+        '</a>';
+    }).join('');
+
+    grid.querySelectorAll('.instagram-post').forEach(function (tile) {
+      tile.addEventListener('click', function (e) {
+        openInPage(e, parseInt(tile.getAttribute('data-post'), 10), parseInt(tile.getAttribute('data-slide'), 10));
+      });
+    });
+
+    var count = document.getElementById('gallery-count');
+    if (count) {
+      count.textContent = photos.length + (photos.length === 1 ? ' photo' : ' photos');
+    }
+
+    if (photos.length > GALLERY_PAGE_SIZE) addShowMore(grid, photos.length, 'gallery-more');
   }
 
   // ===== POST LIGHTBOX =====
@@ -1598,7 +1701,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var img = lightbox.querySelector('.lightbox-image');
     img.src = images[lightboxSlide];
-    img.alt = truncate(cleanCaption(lightboxPost.caption), 100) || 'Photo from Triffid Explorers';
+    img.alt = altFor(lightboxPost, 'Photo from Triffid Explorers');
 
     lightbox.querySelectorAll('.lightbox-dot').forEach(function (dot, i) {
       dot.classList.toggle('is-current', i === lightboxSlide);

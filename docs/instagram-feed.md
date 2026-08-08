@@ -10,7 +10,7 @@ Everything runs on Netlify. There's no third-party feed service involved, which
 is deliberate: the previous setup used Curator.io, and when that stopped syncing
 the site went stale with no way to tell.
 
-1. **`netlify/functions/instagram-sync.js`** runs every night at 05:00 UTC. It
+1. **`netlify/functions/instagram-sync.js`** runs **every hour**. It
    fetches our most recent posts, downloads every image — including each slide
    of a multi-photo post — and stores the images and post details in Netlify
    Blobs.
@@ -57,6 +57,29 @@ The featured card shows the first 500 characters (`FEATURED_CAPTION_LENGTH` in
 `js/main.js`) and then offers **Read the full post**, which opens the same
 dialog rather than sending people away.
 
+## How quickly a new post appears
+
+Worst case is a little over an hour, and usually less.
+
+The sync runs hourly, and the feed is cached at the edge for five minutes. So a
+post goes up, the next sync copies it, and it's on the site.
+
+Checking hourly is cheap because a routine run does almost nothing: one Graph API
+call, then anything already in the previous manifest is recognised and skipped
+without so much as a storage lookup. Only genuinely new posts cause downloads.
+
+## The gallery page
+
+`gallery.html` shows every photo we hold, newest first, with each slide of a
+carousel as its own tile. Clicking one opens that exact photo in the lightbox.
+
+The filter chips reuse the same tag matching as everything else, and a chip for
+an activity with no photos yet removes itself — so the row never offers a filter
+that leads nowhere. Forty photos show initially, then **Show all photos**.
+
+The **Gallery** link in the site navigation points here. It used to point at the
+homepage's `#social` strip.
+
 ## Hashtags: putting posts where they belong
 
 Hashtag a post on Instagram and it turns up in the matching place on the site.
@@ -84,7 +107,10 @@ Clicking one opens the post.
 </section>
 ```
 
-The DofE page has one of these.
+The DofE page has one of these. **Leave `data-tag` off entirely and you get the
+newest posts whatever they're about** — that's how the "What We've Been Up To
+Lately" strips on `join.html` and `bring-a-mate.html` work, so a visitor arriving
+from a search sees a unit that was doing things last month.
 
 ### Rules worth knowing
 
@@ -108,6 +134,8 @@ The DofE page has one of these.
 | Wide Games & Evenings | `#widegames` `#gamesnight` `#evening` |
 | Big Days Out & More | `#daysout` `#climbing` `#karting` `#paintball` |
 | DofE page strip | `#dofe` `#expedition` |
+| Gallery filter chips | as above, one chip per activity |
+| join / bring-a-mate strips | none — newest posts, whatever they are |
 
 These are a starting guess. Changing one is a one-attribute edit in the HTML —
 there's no list to keep in sync elsewhere.
@@ -122,6 +150,7 @@ Two separate numbers, deliberately:
 | Most grid tiles the homepage will ever show | `MAX_GRID_TILES` in `js/main.js` | 16 |
 | How many grid tiles show **before "Show more"** | `TILES_BEFORE_MORE` in `js/main.js` | 8 |
 | Tiles in a tagged strip | `data-count` on the strip | 4 |
+| Gallery photos before "Show all" | `GALLERY_PAGE_SIZE` in `js/main.js` | 40 |
 
 We keep about a year of posts so the activity tags always have something recent
 to pull from. The homepage deliberately doesn't grow with that: the grid shows
