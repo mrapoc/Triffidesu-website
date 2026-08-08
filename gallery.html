@@ -4,154 +4,196 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Photo Gallery | Triffid Explorer Scouts Ludlow</title>
-  <meta name="description" content="Photos from Triffid Explorer Scouts in Ludlow: camping, hiking, kayaking, DofE expeditions and community service. Updated straight from our Instagram.">
+  <meta name="description" content="Camps, expeditions, kayaking and big days out with Triffid Explorer Scouts in Ludlow. Our own photos, updated automatically from Instagram.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.triffidesu.co.uk/gallery.html">
 
-  <!-- Favicon -->
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
 
-  <!-- Open Graph -->
   <meta property="og:title" content="Photo Gallery | Triffid Explorer Scouts Ludlow">
-  <meta property="og:description" content="Photos from our adventures: camping, hiking, kayaking, DofE and community service in Ludlow.">
+  <meta property="og:description" content="What a year at Triffid actually looks like. Camps, expeditions, big days out and ordinary Monday nights.">
   <meta property="og:url" content="https://www.triffidesu.co.uk/gallery.html">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="en_GB">
   <meta property="og:site_name" content="Triffid Explorer Scouts">
   <meta property="og:image" content="https://www.triffidesu.co.uk/images/og-image.jpg">
 
-  <!-- Fonts -->
+  <link rel="preload" as="image" href="images/bike ride 2.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Styles -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800;6..12,900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-
-  <!-- Schema.org Structured Data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "ImageGallery",
-    "@id": "https://www.triffidesu.co.uk/gallery.html#gallery",
-    "name": "Triffid Explorer Scouts Photo Gallery",
-    "description": "Photos from Triffid Explorer Scouts in Ludlow, Shropshire.",
-    "url": "https://www.triffidesu.co.uk/gallery.html",
-    "isPartOf": {"@id": "https://www.triffidesu.co.uk/#website"},
-    "publisher": {"@id": "https://www.triffidesu.co.uk/#organization"},
-    "inLanguage": "en-GB"
-  }
-  </script>
 </head>
 <body>
-<!-- HEADER -->
+  <a href="#main" class="skip-link">Skip to content</a>
+
   <header class="site-header" role="banner">
-    <div class="container">
-      <nav class="nav-wrapper" aria-label="Main navigation">
-        <a href="index.html" class="nav-logo">
-          <img src="images/triffid%20logo.png" alt="Triffid Explorer Scouts logo" onerror="this.style.display='none'">
-          <span>Triffid Explorers</span>
-        </a>
-        <ul class="nav-links" id="navLinks">
+    <span class="necker" aria-hidden="true"></span>
+    <nav class="nav-wrapper" aria-label="Main navigation">
+      <a href="index.html" class="nav-logo">
+        <img src="images/triffid%20logo.png" alt="Triffid Explorer Scouts logo" width="46" height="46">
+        <span>Triffid Explorers</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#activities">Activities</a></li>
+        <li><a href="index.html#programme">Programme</a></li>
+        <li><a href="dofe.html">Duke of Edinburgh</a></li>
+        <li><a href="badges.html">Badges</a></li>
+        <li><a href="gallery.html" class="active">Gallery</a></li>
+        <li><a href="moving-up.html">Moving Up</a></li>
+        <li><a href="support.html">Support Us</a></li>
+        <li><a href="join.html" class="nav-cta">Join Us</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero hero-compact">
+      <img class="hero-media" src="images/bike ride 2.jpg" alt="Triffid Explorers pausing to enjoy the sunset on a countryside bike ride" width="1440" height="1080" fetchpriority="high">
+      <div class="hero-content">
+        <span class="eyebrow">Gallery</span>
+        <h1>What a year at Triffid actually looks like</h1>
+        <p class="hero-lede">Camps, expeditions, big days out and ordinary Monday nights. All our own photographs, all our own Explorers, all in real Shropshire weather.</p>
+        <div class="hero-buttons">
+          <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer" class="btn btn-lg">Follow us on Instagram <span class="arrow" aria-hidden="true">&rarr;</span></a>
+          <a href="mailto:hello@triffidesu.co.uk" class="btn btn-lg btn-on-dark-ghost">Come and join in</a>
+        </div>
+        <div class="hero-badges">
+          <span class="badge badge-sm">Updated from Instagram</span>
+          <span class="badge badge-sm">Our own photos</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE GALLERY (every photo we hold, one tile per carousel slide) -->
+    <section class="section" id="photos">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">Latest adventures</span>
+          <span class="necker-rule" aria-hidden="true"></span>
+          <h2>Fresh from our Instagram</h2>
+          <p>This grid syncs automatically, so it's whatever we got up to last. <span id="gallery-count" class="gallery-count"></span></p>
+        </div>
+
+        <div id="gallery-filters" class="gallery-filters" hidden>
+          <button type="button" class="is-current" data-tag="">Everything</button>
+          <button type="button" data-tag="hike cycle expedition">Hiking &amp; cycling</button>
+          <button type="button" data-tag="camp bushcraft">Camping</button>
+          <button type="button" data-tag="kayak paddle water">On the water</button>
+          <button type="button" data-tag="service community remembrance">Community</button>
+          <button type="button" data-tag="widegames gamesnight evening">Wide games</button>
+          <button type="button" data-tag="daysout climbing karting paintball">Big days out</button>
+          <button type="button" data-tag="dofe expedition">DofE</button>
+        </div>
+
+        <div id="gallery-grid" class="instagram-grid"></div>
+        <p id="gallery-loading" class="feed-loading">Loading photos&hellip;</p>
+        <div id="gallery-fallback" class="instagram-fallback" style="display: none;">
+          <p>Our feed is having a rest. Pop over to Instagram to see what we've been up to.</p>
+          <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer" class="link-arrow">View our Instagram <span class="arrow" aria-hidden="true">&rarr;</span></a>
+        </div>
+
+        <div class="row" style="margin-top: var(--space-5);">
+          <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer" class="btn">View our Instagram <span class="arrow" aria-hidden="true">&rarr;</span></a>
+          <a class="link-arrow" href="https://www.facebook.com/triffidesu" target="_blank" rel="noopener noreferrer">And on Facebook <span class="arrow" aria-hidden="true">&rarr;</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- THE ARCHIVE -->
+    <section class="section section-muted" id="archive">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">The archive</span>
+          <span class="necker-rule" aria-hidden="true"></span>
+          <h2>A few of our favourites</h2>
+          <p>Pulled out of the last couple of years.</p>
+        </div>
+        <div class="masonry">
+          <figure><img src="images/kyaking.jpg" alt="Triffid Explorers kayaking under a bridge on the river in Ludlow" loading="lazy"></figure>
+          <figure><img src="images/fire.jpg" alt="Explorers cooking over a campfire on camp" loading="lazy"></figure>
+          <figure><img src="images/rock climbing.jpg" alt="An Explorer rock climbing on a natural Shropshire crag" loading="lazy"></figure>
+          <figure><img src="images/bike ride.jpg" alt="Explorers cycling through the Shropshire countryside" loading="lazy"></figure>
+          <figure><img src="images/paintballing.jpg" alt="Explorers in camo gear at paintballing" loading="lazy"></figure>
+          <figure><img src="images/forest tracking.jpg" alt="Wide games in the woods after dark" loading="lazy"></figure>
+          <figure><img src="images/first aid.jpg" alt="Explorers completing their emergency aid training" loading="lazy"></figure>
+          <figure><img src="images/map reading.jpg" alt="Navigation training with Ordnance Survey maps of the Ludlow area" loading="lazy"></figure>
+          <figure><img src="images/kyaking 2.jpg" alt="Kayaking on the river in Ludlow" loading="lazy"></figure>
+          <figure><img src="images/remembrance.jpg" alt="Triffid Explorers at a remembrance ceremony" loading="lazy"></figure>
+          <figure><img src="images/bike ride 2.jpg" alt="Explorers pausing to enjoy the sunset on a countryside bike ride" loading="lazy"></figure>
+          <figure><img src="images/first aid 3.jpg" alt="Explorers with their Stage 4 Emergency Aid certificates" loading="lazy"></figure>
+          <figure><img src="images/sailing.jpg" alt="Explorers out sailing" loading="lazy"></figure>
+          <figure><img src="images/crafts.jpg" alt="Explorers working on a craft activity at the hut" loading="lazy"></figure>
+          <figure><img src="images/kyaking 3.jpg" alt="Kayaking on the river with the unit" loading="lazy"></figure>
+          <figure><img src="images/remembrance 2.jpg" alt="Triffid Explorers on parade at a remembrance ceremony" loading="lazy"></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section section-brand">
+      <div class="container container-narrow">
+        <div class="section-header is-centred" style="margin-bottom: 0;">
+          <span class="necker-rule necker-on-dark" aria-hidden="true" style="width: 90px;"></span>
+          <h2 class="display-2">Fancy being in next year's photos?</h2>
+          <p class="lede" style="color: rgba(255,255,255,.9);">Mondays, 7&ndash;9pm at Ludlow Scout Hut. Turn up and see what it's like.</p>
+          <div class="row" style="justify-content: center;">
+            <a href="join.html" class="btn btn-lg btn-on-dark">How to join</a>
+            <a href="mailto:hello@triffidesu.co.uk" class="btn btn-lg btn-on-dark-ghost">Email us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <span class="necker necker-on-dark" aria-hidden="true"></span>
+    <div class="footer-grid">
+      <div class="footer-about">
+        <img src="images/triffid%20logo.png" alt="Triffid Explorer Scouts" class="footer-logo" width="64" height="64">
+        <h3>Triffid Explorer Scouts</h3>
+        <p>Adventure, teamwork, and memories that last. Explorer Scouts in Ludlow for 14&ndash;18 year olds.</p>
+        <div class="social-links">
+          <a href="https://www.facebook.com/triffidesu" target="_blank" rel="noopener noreferrer">Facebook</a>
+          <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer">Instagram</a>
+        </div>
+      </div>
+      <div>
+        <h4>Quick links</h4>
+        <ul>
           <li><a href="index.html">Home</a></li>
           <li><a href="index.html#activities">Activities</a></li>
           <li><a href="index.html#programme">Programme</a></li>
           <li><a href="dofe.html">Duke of Edinburgh</a></li>
-          <li><a href="gallery.html" class="active">Gallery</a></li>
-          <li><a href="moving-up.html">Moving Up</a></li>
+          <li><a href="badges.html">Badges</a></li>
+          <li><a href="join.html">Join Us</a></li>
+          <li><a href="moving-up.html">Moving Up from Scouts</a></li>
+          <li><a href="bring-a-mate.html">Bring a Mate</a></li>
           <li><a href="support.html">Support Us</a></li>
-          <li><a href="join.html" class="btn btn-primary nav-cta">Join Us</a></li>
         </ul>
-        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
-          <span></span><span></span><span></span>
-        </button>
-      </nav>
-    </div>
-  </header>
-
-  <!-- GALLERY -->
-  <section class="section" id="gallery">
-    <div class="container">
-      <div class="section-header">
-        <h2>Photo Gallery</h2>
-        <p>Everything we've been up to, straight from our Instagram. <span id="gallery-count"></span></p>
       </div>
-
-      <!-- Filters are removed for any activity we've no photos of yet -->
-      <div class="gallery-filters" id="gallery-filters" role="group" aria-label="Filter photos by activity" hidden>
-        <button type="button" class="is-current">Everything</button>
-        <button type="button" data-tag="camp bushcraft">Camping</button>
-        <button type="button" data-tag="hike cycle expedition">Hiking &amp; Cycling</button>
-        <button type="button" data-tag="kayak paddle water">Water</button>
-        <button type="button" data-tag="dofe">DofE</button>
-        <button type="button" data-tag="service community remembrance">Community</button>
-        <button type="button" data-tag="daysout climbing karting paintball">Days Out</button>
-      </div>
-
-      <div id="gallery-grid" class="instagram-grid gallery-grid"></div>
-
-      <p id="gallery-loading" style="text-align: center; color: var(--grey);">Loading photos&hellip;</p>
-
-      <div id="gallery-fallback" class="instagram-fallback" style="display: none;">
-        <p>Our photos are having a rest. Pop over to Instagram to see what we've been up to.</p>
-        <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer" class="btn btn-outline">View our Instagram</a>
+      <div>
+        <h4>Contact us</h4>
+        <ul>
+          <li><a href="https://www.google.com/maps?gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOTIICAEQABgWGB4yDQgCEAAYhgMYgAQYigUyCggDEAAYgAQYogQyCAgEEOkHGPxV0gEIMjExMGowajGoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=uk&sa=X&geocode=KZfWk3lManBIMe-bzw5wwnfV&daddr=Station+Dr,+Ludlow+SY8+2PQ" target="_blank" rel="noopener noreferrer">Ludlow Scout Hut</a></li>
+          <li>Station Drive, Ludlow</li>
+          <li>Shropshire SY8 2PQ</li>
+          <li><a href="mailto:hello@triffidesu.co.uk">hello@triffidesu.co.uk</a></li>
+          <li>Mondays 7&ndash;9pm</li>
+        </ul>
       </div>
     </div>
-  </section>
-
-  <!-- CTA -->
-  <section class="cta-section" id="gallery-join">
-    <div class="container">
-      <h2>Fancy Being In The Next One?</h2>
-      <p>Come along on a Monday and see what we're about. No commitment, just turn up.</p>
-      <a href="join.html" class="btn btn-cta-white">Find Out More</a>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="site-footer" role="contentinfo">
-    <div class="container">
-      <div class="footer-grid">
-        <div class="footer-about">
-          <img src="images/triffid%20logo.png" alt="Triffid ESU" class="footer-logo">
-          <h4 style="color: white; margin-bottom: 0.5rem;">Triffid Explorer Scouts</h4>
-          <p>Adventure, teamwork, and memories that last. Explorer Scouts in Ludlow for 14&ndash;18 year olds.</p>
-          <div class="social-links">
-            <a href="https://www.facebook.com/triffidesu" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-              <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-            </a>
-            <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-            </a>
-          </div>
-        </div>
-        <div class="footer-links">
-          <h4>Quick Links</h4>
-          <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="index.html#activities">Activities</a></li>
-            <li><a href="index.html#programme">Programme</a></li>
-            <li><a href="dofe.html">Duke of Edinburgh</a></li>
-            <li><a href="join.html">Join Us</a></li>
-            <li><a href="moving-up.html">Moving Up from Scouts</a></li>
-            <li><a href="bring-a-mate.html">Bring a Mate</a></li>
-            <li><a href="support.html">Support Us</a></li>
-          </ul>
-        </div>
-        <div class="footer-contact">
-          <h4>Contact Us</h4>
-          <p><a href="https://www.google.com/maps?gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOTIICAEQABgWGB4yDQgCEAAYhgMYgAQYigUyCggDEAAYgAQYogQyCAgEEOkHGPxV0gEIMjExMGowajGoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=uk&sa=X&geocode=KZfWk3lManBIMe-bzw5wwnfV&daddr=Station+Dr,+Ludlow+SY8+2PQ" target="_blank" rel="noopener noreferrer">Ludlow Scout Hut</a></p>
-          <p>Station Drive, Ludlow</p>
-          <p>Shropshire SY8 2PQ</p>
-          <p><a href="mailto:hello@triffidesu.co.uk">hello@triffidesu.co.uk</a></p>
-          <p style="margin-top: 0.5rem;"><strong>Mondays 7&ndash;9pm</strong></p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 Triffid Explorer Scouts. Part of <a href="https://www.scouts.org.uk" target="_blank" rel="noopener noreferrer" style="color: rgba(255,255,255,0.7);">The Scout Association</a>.</p>
-        <p style="margin-top: 0.5rem;">Website by <a href="https://fresh-tech.uk" target="_blank" rel="noopener noreferrer" style="color: rgba(255,255,255,0.7);">Fresh Tech</a></p>
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <p>&copy; 2026 Triffid Explorer Scouts. Part of <a href="https://www.scouts.org.uk" target="_blank" rel="noopener noreferrer">The Scout Association</a>. Website by <a href="https://fresh-tech.uk" target="_blank" rel="noopener noreferrer">Fresh Tech</a>.</p>
+        <p>Triffid Explorer Scout Unit &middot; Shropshire Severn and Teme District</p>
       </div>
     </div>
   </footer>
