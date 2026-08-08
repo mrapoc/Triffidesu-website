@@ -2865,9 +2865,24 @@ body.lightbox-open {
   margin-bottom: var(--space-3);
 }
 
-.lightbox-source {
+.lightbox-actions {
   margin-top: auto;
-  font-weight: var(--weight-heavy);
+  padding-top: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* Secondary to the visit CTA beside it: this is the way out, not the way in. */
+.lightbox-source {
+  font-size: var(--size-body-sm);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+}
+
+.lightbox-source:hover {
+  color: var(--text-link);
 }
 
 @media (max-width: 860px) {

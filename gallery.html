@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Photo Gallery | Triffid Explorer Scouts Ludlow</title>
-  <meta name="description" content="Camps, expeditions, kayaking and big days out with Triffid Explorer Scouts in Ludlow. Our own photos, updated automatically from Instagram.">
+  <title>Photos | Explorer Scouts in Ludlow | Triffid Explorers</title>
+  <meta name="description" content="Camps, expeditions, kayaking, climbing and big days out in Shropshire, photographed by us. Real Explorers, real weather, no stock photography.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.triffidesu.co.uk/gallery.html">
 
@@ -25,6 +25,26 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800;6..12,900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.triffidesu.co.uk/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Gallery",
+        "item": "https://www.triffidesu.co.uk/gallery.html"
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <a href="#main" class="skip-link">Skip to content</a>
@@ -62,11 +82,11 @@
         <h1>What a year at Triffid actually looks like</h1>
         <p class="hero-lede">Camps, expeditions, big days out and ordinary Monday nights. All our own photographs, all our own Explorers, all in real Shropshire weather.</p>
         <div class="hero-buttons">
-          <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer" class="btn btn-lg">Follow us on Instagram <span class="arrow" aria-hidden="true">&rarr;</span></a>
-          <a href="mailto:hello@triffidesu.co.uk" class="btn btn-lg btn-on-dark-ghost">Come and join in</a>
+          <a href="mailto:hello@triffidesu.co.uk?subject=Arranging%20a%20first%20visit%20to%20Triffid%20Explorers" class="btn btn-lg">Arrange a visit <span class="arrow" aria-hidden="true">&rarr;</span></a>
+          <a href="join.html" class="btn btn-lg btn-on-dark-ghost">How joining works</a>
         </div>
         <div class="hero-badges">
-          <span class="badge badge-sm">Updated from Instagram</span>
+          <span class="badge badge-sm">Updated all the time</span>
           <span class="badge badge-sm">Our own photos</span>
         </div>
       </div>
@@ -78,31 +98,31 @@
         <div class="section-header">
           <span class="eyebrow">Latest adventures</span>
           <span class="necker-rule" aria-hidden="true"></span>
-          <h2>Fresh from our Instagram</h2>
-          <p>This grid syncs automatically, so it's whatever we got up to last. <span id="gallery-count" class="gallery-count"></span></p>
+          <h2>What we've been doing lately</h2>
+          <p>Every photo we've taken recently, newest first. <span id="gallery-count" class="gallery-count"></span></p>
         </div>
 
         <div id="gallery-filters" class="gallery-filters" hidden>
-          <button type="button" class="is-current" data-tag="">Everything</button>
-          <button type="button" data-tag="hike cycle expedition">Hiking &amp; cycling</button>
-          <button type="button" data-tag="camp bushcraft">Camping</button>
-          <button type="button" data-tag="kayak paddle water">On the water</button>
-          <button type="button" data-tag="service community remembrance">Community</button>
-          <button type="button" data-tag="widegames gamesnight evening">Wide games</button>
-          <button type="button" data-tag="daysout climbing karting paintball">Big days out</button>
-          <button type="button" data-tag="dofe expedition">DofE</button>
+          <button type="button" class="is-current" data-topic="">Everything</button>
+          <button type="button" data-topic="hiking">Hiking &amp; cycling</button>
+          <button type="button" data-topic="camping">Camping</button>
+          <button type="button" data-topic="water">On the water</button>
+          <button type="button" data-topic="service">Community</button>
+          <button type="button" data-topic="games">Wide games</button>
+          <button type="button" data-topic="daysout">Big days out</button>
+          <button type="button" data-topic="dofe">DofE</button>
         </div>
 
         <div id="gallery-grid" class="instagram-grid"></div>
         <p id="gallery-loading" class="feed-loading">Loading photos&hellip;</p>
         <div id="gallery-fallback" class="instagram-fallback" style="display: none;">
-          <p>Our feed is having a rest. Pop over to Instagram to see what we've been up to.</p>
-          <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer" class="link-arrow">View our Instagram <span class="arrow" aria-hidden="true">&rarr;</span></a>
+          <p>Photos are having a rest. The archive below is still worth a look, and the quickest way to see the rest is to come along.</p>
+          <a href="mailto:hello@triffidesu.co.uk?subject=Arranging%20a%20first%20visit%20to%20Triffid%20Explorers" class="link-arrow">Arrange a visit <span class="arrow" aria-hidden="true">&rarr;</span></a>
         </div>
 
         <div class="row" style="margin-top: var(--space-5);">
-          <a href="https://www.instagram.com/triffidesu/" target="_blank" rel="noopener noreferrer" class="btn">View our Instagram <span class="arrow" aria-hidden="true">&rarr;</span></a>
-          <a class="link-arrow" href="https://www.facebook.com/triffidesu" target="_blank" rel="noopener noreferrer">And on Facebook <span class="arrow" aria-hidden="true">&rarr;</span></a>
+          <a href="mailto:hello@triffidesu.co.uk?subject=Arranging%20a%20first%20visit%20to%20Triffid%20Explorers" class="btn">Arrange a visit <span class="arrow" aria-hidden="true">&rarr;</span></a>
+          <a class="link-arrow" href="join.html">See how joining works <span class="arrow" aria-hidden="true">&rarr;</span></a>
         </div>
       </div>
     </section>
@@ -143,10 +163,10 @@
         <div class="section-header is-centred" style="margin-bottom: 0;">
           <span class="necker-rule necker-on-dark" aria-hidden="true" style="width: 90px;"></span>
           <h2 class="display-2">Fancy being in next year's photos?</h2>
-          <p class="lede" style="color: rgba(255,255,255,.9);">Mondays, 7&ndash;9pm at Ludlow Scout Hut. Turn up and see what it's like.</p>
+          <p class="lede" style="color: rgba(255,255,255,.9);">Mondays, 7&ndash;9pm at Ludlow Scout Hut. Email us and we'll sort you a night to come and see what it's like.</p>
           <div class="row" style="justify-content: center;">
-            <a href="join.html" class="btn btn-lg btn-on-dark">How to join</a>
-            <a href="mailto:hello@triffidesu.co.uk" class="btn btn-lg btn-on-dark-ghost">Email us</a>
+            <a href="mailto:hello@triffidesu.co.uk?subject=Arranging%20a%20first%20visit%20to%20Triffid%20Explorers" class="btn btn-lg btn-on-dark">Arrange a visit <span class="arrow" aria-hidden="true">&rarr;</span></a>
+            <a href="join.html" class="btn btn-lg btn-on-dark-ghost">How joining works</a>
           </div>
         </div>
       </div>
@@ -192,7 +212,7 @@
     </div>
     <div class="footer-bottom">
       <div class="footer-bottom-inner">
-        <p>&copy; 2026 Triffid Explorer Scouts. Part of <a href="https://www.scouts.org.uk" target="_blank" rel="noopener noreferrer">The Scout Association</a>. Website by <a href="https://fresh-tech.uk" target="_blank" rel="noopener noreferrer">Fresh Tech</a>.</p>
+        <p>&copy; 2026 Triffid Explorer Scouts. Part of <a href="https://www.scouts.org.uk" target="_blank" rel="noopener noreferrer">The Scout Association</a>. <a href="privacy.html">Privacy and photographs</a>. Website by <a href="https://fresh-tech.uk" target="_blank" rel="noopener noreferrer">Fresh Tech</a>.</p>
         <!-- POR 2e.2.7.4: the official Scouts logo, localised with the unit name beneath. -->
         <span class="scouts-lockup">
           <img src="images/scouts/scouts-logo-stacked-white.png" alt="Scouts" width="74" height="54" loading="lazy">

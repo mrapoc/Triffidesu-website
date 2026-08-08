@@ -228,10 +228,61 @@ document.addEventListener('DOMContentLoaded', function () {
   // Every post we've been given, so the lightbox can open any of them by index.
   var feedPosts = [];
 
+  // ===== WHERE A POST LANDS ON THE SITE =====
+  // The whole point of this is that nobody has to administer it. James posts to
+  // Instagram as normal; the post turns up in the right section here on its own.
+  //
+  // A section asks for a topic (data-topic="water"), and a post matches that
+  // topic if any of the words below appear in its caption. A hashtag and a
+  // plain word both count, so "#kayak" and "great night kayaking" both land in
+  // the same place. Nothing is case sensitive, and a trailing "s" is ignored.
+  //
+  // To change where something lands, edit this list. It is the only place these
+  // words live — no HTML to touch, no admin screen, no re-deploy needed beyond
+  // the usual one. docs/hashtags.md is the plain-English version for James.
+  var TOPICS = {
+    hiking: ['hike', 'hiking', 'walk', 'walking', 'ramble', 'cycle', 'cycling', 'bike', 'biking', 'ride', 'expedition', 'expeditions'],
+    camping: ['camp', 'camping', 'campfire', 'campsite', 'bushcraft', 'survival', 'nightsaway', 'tent', 'tents'],
+    water: ['kayak', 'kayaking', 'canoe', 'canoeing', 'paddle', 'paddling', 'paddlesport', 'water', 'sailing', 'sail', 'raft', 'rafting', 'swim', 'swimming'],
+    service: ['service', 'community', 'remembrance', 'parade', 'volunteering', 'volunteer', 'fundraising', 'litterpick'],
+    games: ['widegames', 'widegame', 'gamesnight', 'games', 'evening', 'hutnight', 'nighthike', 'cooking', 'crafts', 'craft'],
+    daysout: ['daysout', 'dayout', 'climbing', 'climb', 'karting', 'gokarting', 'gokart', 'paintball', 'paintballing', 'monopolyrun', 'trip', 'tripout'],
+    dofe: ['dofe', 'dukeofedinburgh', 'bronze', 'silver', 'gold', 'expedition', 'navigation', 'navigating'],
+    skills: ['firstaid', 'emergencyaid', 'aid', 'skills', 'navigation', 'map', 'maps', 'mapreading', 'training'],
+  };
+
+  // Turn whatever a section asked for into a list of words to look for.
+  // Accepts a topic name ("water"), or raw words for one-off cases.
+  function termsFor(spec) {
+    var asked = (spec || '').toLowerCase().split(/[\s,]+/).filter(Boolean);
+    var terms = [];
+    asked.forEach(function (word) {
+      var bare = word.replace(/^#/, '');
+      if (TOPICS[bare]) {
+        terms = terms.concat(TOPICS[bare]);
+      } else {
+        terms.push(bare);
+      }
+    });
+    return terms;
+  }
+
+  // Hashes are stripped before matching, so "#camp" and "camp" are the same
+  // thing. \b keeps "camp" from swallowing "campaign", and an optional trailing
+  // "s" covers the plural without pulling in every word that starts the same.
+  function captionMatches(post, terms) {
+    if (!terms.length) return true;
+    var caption = (post.caption || '').toLowerCase().replace(/#/g, ' ');
+    return terms.some(function (term) {
+      var safe = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp('\\b' + safe + 's?\\b').test(caption);
+    });
+  }
+
   var newsContainer = document.getElementById('latest-news');
   var feedContainer = document.getElementById('instagram-feed');
   // Inner pages have no feed sections, only tagged photos and strips.
-  var hasTagged = document.querySelector('[data-tag], .tag-feed, #gallery-grid');
+  var hasTagged = document.querySelector('[data-topic], [data-tag], .tag-feed, #gallery-grid');
 
   if (newsContainer || feedContainer || hasTagged) {
     fetch('/.netlify/functions/instagram')
@@ -248,6 +299,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (feedContainer) populateInstagramFeed(posts.slice(1, 1 + MAX_GRID_TILES), 1);
         populateTagged();
         populateGallery();
+        reportTagRouting();
       })
       .catch(function () {
         showSocialFallback();
@@ -509,22 +561,18 @@ document.addEventListener('DOMContentLoaded', function () {
     return !!post && claimedPosts.indexOf(post.id) !== -1;
   }
 
-  function postsWithTag(tagList) {
-    var wanted = (tagList || '').toLowerCase().split(/[\s,]+/).filter(Boolean);
-    // No tag asked for means "whatever's newest", which is how the recruitment
-    // pages show recent activity without caring what it was.
-    if (!wanted.length) return feedPosts.slice();
+  // Nothing asked for means "whatever's newest", which is how the recruitment
+  // pages show recent activity without caring what it was.
+  function postsWithTag(spec) {
+    var terms = termsFor(spec);
+    if (!terms.length) return feedPosts.slice();
+    return feedPosts.filter(function (post) { return captionMatches(post, terms); });
+  }
 
-    var patterns = wanted.map(function (tag) {
-      var bare = tag.replace(/^#/, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // \b so #camp doesn't also pull in #camping, keeping tags predictable.
-      return new RegExp('#' + bare + '\\b');
-    });
-
-    return feedPosts.filter(function (post) {
-      var caption = (post.caption || '').toLowerCase();
-      return patterns.some(function (pattern) { return pattern.test(caption); });
-    });
+  // A section can say data-topic="water" (preferred) or data-tag="kayak paddle"
+  // for a one-off. Both end up in the same matcher.
+  function specOf(el) {
+    return el.getAttribute('data-topic') || el.getAttribute('data-tag') || '';
   }
 
   function indexOfPost(post) {
@@ -532,7 +580,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function populateTagged() {
-    document.querySelectorAll('img[data-tag]').forEach(refreshTaggedImage);
+    document.querySelectorAll('img[data-topic], img[data-tag]').forEach(refreshTaggedImage);
     document.querySelectorAll('.tag-feed').forEach(fillTagFeed);
   }
 
@@ -540,7 +588,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // box is a fixed aspect ratio in CSS, so this costs no layout shift and no
   // extra page length. The card just stops being from three years ago.
   function refreshTaggedImage(img) {
-    var matches = postsWithTag(img.getAttribute('data-tag'));
+    var matches = postsWithTag(specOf(img));
     var post = null;
     for (var i = 0; i < matches.length; i++) {
       if (matches[i].image && !isClaimed(matches[i])) { post = matches[i]; break; }
@@ -568,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function fillTagFeed(container) {
     var wanted = parseInt(container.getAttribute('data-count'), 10) || TAG_FEED_TILES;
-    var candidates = postsWithTag(container.getAttribute('data-tag')).filter(function (post) {
+    var candidates = postsWithTag(specOf(container)).filter(function (post) {
       return post.image;
     });
 
@@ -603,6 +651,36 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Add ?tags=check to any page to see where each recent post was routed and
+  // which words did it. Nobody needs this day to day, but when a photo doesn't
+  // turn up where you expected, it answers the question in one look instead of
+  // guessing at hashtags.
+  function reportTagRouting() {
+    if (window.location.search.indexOf('tags=check') === -1) return;
+
+    var topics = Object.keys(TOPICS);
+    var rows = feedPosts.slice(0, 20).map(function (post) {
+      var caption = (post.caption || '').replace(/\s+/g, ' ').trim();
+      var matched = topics.filter(function (topic) {
+        return captionMatches(post, TOPICS[topic]);
+      });
+      return {
+        posted: formatPostDate(post.timestamp),
+        caption: truncate(caption, 60) || '(no caption)',
+        'lands in': matched.length ? matched.join(', ') : '— newest-posts slots only',
+      };
+    });
+
+    console.log('%c Where your recent posts land ', 'background:#7413dc;color:#fff;padding:4px 8px;border-radius:4px;font-weight:700');
+    if (console.table) { console.table(rows); } else { console.log(rows); }
+
+    var unrouted = rows.filter(function (r) { return r['lands in'].charAt(0) === '—'; }).length;
+    console.log(unrouted
+      ? unrouted + ' of ' + rows.length + ' recent posts matched no topic. They still show in the newest-posts strips, they just will not fill a themed section. See docs/hashtags.md.'
+      : 'Every recent post matched at least one topic.');
+    console.log('Topics available: ' + topics.join(', '));
+  }
+
   // ===== GALLERY PAGE =====
   // Every photo we hold, newest first, flattened so each slide of a carousel is
   // its own tile. Filters reuse the same tag matching as everywhere else.
@@ -629,11 +707,12 @@ document.addEventListener('DOMContentLoaded', function () {
     var bar = document.getElementById('gallery-filters');
     if (!bar) return;
 
-    var available = [].slice.call(bar.querySelectorAll('[data-tag]')).filter(function (button) {
-      return postsWithTag(button.getAttribute('data-tag')).length > 0;
+    var buttons = [].slice.call(bar.querySelectorAll('[data-topic], [data-tag]'));
+    var available = buttons.filter(function (button) {
+      return postsWithTag(specOf(button)).length > 0;
     });
 
-    bar.querySelectorAll('[data-tag]').forEach(function (button) {
+    buttons.forEach(function (button) {
       if (available.indexOf(button) === -1) button.remove();
     });
 
@@ -648,7 +727,7 @@ document.addEventListener('DOMContentLoaded', function () {
       button.addEventListener('click', function () {
         bar.querySelectorAll('button').forEach(function (other) { other.classList.remove('is-current'); });
         button.classList.add('is-current');
-        renderGallery(button.getAttribute('data-tag') || '');
+        renderGallery(specOf(button));
       });
     });
   }
@@ -722,7 +801,12 @@ document.addEventListener('DOMContentLoaded', function () {
       '  <div class="lightbox-body">',
       '    <p class="lightbox-date"></p>',
       '    <div class="lightbox-caption"></div>',
-      '    <a class="lightbox-source" target="_blank" rel="noopener noreferrer">View on Instagram</a>',
+      // Somebody reading a post is as interested as they get. Offer them a way
+      // in here rather than a way out to the feed.
+      '    <div class="lightbox-actions">',
+      '      <a class="btn btn-sm" href="mailto:hello@triffidesu.co.uk?subject=Arranging%20a%20first%20visit%20to%20Triffid%20Explorers">Arrange a visit <span class="arrow" aria-hidden="true">&rarr;</span></a>',
+      '      <a class="lightbox-source" target="_blank" rel="noopener noreferrer">View on Instagram</a>',
+      '    </div>',
       '  </div>',
       '</div>',
     ].join('');
