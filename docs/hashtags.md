@@ -28,8 +28,8 @@ words, it usually lands correctly on its own.
 | hike, walk, cycle, bike, ride, expedition | **Hiking & cycling** card and gallery filter |
 | camp, camping, campfire, bushcraft, survival, tent | **Camping** card and filter |
 | kayak, canoe, paddle, sailing, water, swim, raft | **Kayaking & water** card and filter |
-| service, community, remembrance, parade, volunteering, fundraising | **Community service** card and filter |
-| wide games, games night, hut night, night hike, cooking, crafts | **Wide games & evenings** card and filter |
+| service, community, remembrance, parade, volunteering, fundraising, silence, reflection, poppy | **Community service** card and filter |
+| wide games, games night, hut night, night hike, cooking, crafts, creative, paracord, woggle, cricket, football, sport, quiz, pizza | **Wide games & evenings** card and filter |
 | climbing, karting, paintball, Monopoly Run, day out, trip | **Big days out** card and filter |
 | DofE, expedition, bronze, silver, gold, navigation | **DofE** strip on the Duke of Edinburgh page |
 | first aid, emergency aid, skills, map reading, training | **Skills** cards |
@@ -37,6 +37,10 @@ words, it usually lands correctly on its own.
 Capital letters don't matter. Plurals don't matter (`tents` works as well as
 `tent`). A post can match more than one, which is fine and often right: a camp
 where you also went climbing fills both.
+
+These lists were built from your actual captions, not from guesswork. The
+Remembrance words are there because you write "two minutes' silence" and "a
+quiet moment of reflection" rather than the word "remembrance".
 
 ## If a post matches nothing
 

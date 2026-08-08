@@ -252,8 +252,14 @@ document.addEventListener('DOMContentLoaded', function () {
     hiking: ['hike', 'hiking', 'walk', 'walking', 'ramble', 'cycle', 'cycling', 'bike', 'biking', 'ride', 'expedition', 'expeditions'],
     camping: ['camp', 'camping', 'campfire', 'campsite', 'bushcraft', 'survival', 'nightsaway', 'tent', 'tents'],
     water: ['kayak', 'kayaking', 'canoe', 'canoeing', 'paddle', 'paddling', 'paddlesport', 'water', 'sailing', 'sail', 'raft', 'rafting', 'swim', 'swimming'],
-    service: ['service', 'community', 'remembrance', 'parade', 'volunteering', 'volunteer', 'fundraising', 'litterpick'],
-    games: ['widegames', 'widegame', 'gamesnight', 'games', 'evening', 'hutnight', 'nighthike', 'cooking', 'crafts', 'craft'],
+    // "silence", "reflection" and "poppy" are here because that is how the
+    // Remembrance posts are actually written — the word "remembrance" itself
+    // rarely appears in them.
+    service: ['service', 'community', 'remembrance', 'parade', 'volunteering', 'volunteer', 'fundraising', 'litterpick',
+      'silence', 'reflection', 'poppy', 'poppies', 'cenotaph', 'armistice'],
+    // Sports nights, craft nights and taste tests are all hut nights.
+    games: ['widegames', 'widegame', 'gamesnight', 'games', 'evening', 'hutnight', 'nighthike', 'cooking', 'crafts', 'craft',
+      'cricket', 'football', 'rounders', 'dodgeball', 'sport', 'sports', 'creative', 'paracord', 'woggle', 'keyring', 'keyrings', 'quiz', 'tasting', 'pizza'],
     daysout: ['daysout', 'dayout', 'climbing', 'climb', 'karting', 'gokarting', 'gokart', 'paintball', 'paintballing', 'monopolyrun', 'trip', 'tripout'],
     dofe: ['dofe', 'dukeofedinburgh', 'bronze', 'silver', 'gold', 'expedition', 'navigation', 'navigating'],
     skills: ['firstaid', 'emergencyaid', 'aid', 'skills', 'navigation', 'map', 'maps', 'mapreading', 'training'],
