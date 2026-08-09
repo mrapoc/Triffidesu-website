@@ -189,9 +189,27 @@
   --scrim-bottom: linear-gradient(to top, rgba(0, 33, 77, .88) 0%, rgba(0, 33, 77, .55) 38%, rgba(0, 33, 77, 0) 78%);
   --scrim-full: linear-gradient(180deg, rgba(0, 33, 77, .35), rgba(0, 33, 77, .72));
 
-  /* The necker. On navy or ink the black band vanishes, so use --necker-on-dark. */
+  /* The hero scrim is measured against the block of type, not the hero, and
+     is applied to .hero-content. A hero-height gradient runs out before the
+     type does: on a phone the text climbs to 93% of the hero, so the eyebrow
+     and the top of the h1 ended up on bare photograph. Held above .8 for the
+     whole height of the type so gold on a blown-out sky still clears 4.5:1. */
+  --scrim-hero: linear-gradient(to top,
+      rgba(0, 33, 77, .88) 0%,
+      rgba(0, 33, 77, .86) 55%,
+      rgba(0, 33, 77, .82) 76%,
+      rgba(0, 33, 77, .70) 88%,
+      rgba(0, 33, 77, 0) 100%);
+  /* A light wash under all of it, so the photo still reads as one image. */
+  --scrim-hero-base: linear-gradient(to top, rgba(0, 33, 77, .32) 0%, rgba(0, 33, 77, .12) 55%, rgba(0, 33, 77, 0) 88%);
+
+  /* The necker, in the fabric's own proportions: 64% black body, then green
+     and red on the outer edge. Same ratio on every surface. On navy or ink
+     the black band would disappear into the background, so on dark it is
+     lifted just far enough to read — the proportions never change. */
   --necker: linear-gradient(90deg, var(--necker-black) 0 64%, var(--necker-green) 64% 82%, var(--necker-red) 82% 100%);
-  --necker-on-dark: linear-gradient(90deg, var(--necker-green) 0 55%, var(--necker-red) 55% 100%);
+  --necker-black-on-dark: #4a4547;
+  --necker-on-dark: linear-gradient(90deg, var(--necker-black-on-dark) 0 64%, var(--necker-green) 64% 82%, var(--necker-red) 82% 100%);
   --necker-height: 6px;
 
   /* --- Motion --- */
@@ -1129,7 +1147,7 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--scrim-bottom);
+  background: var(--scrim-hero-base);
   pointer-events: none;
 }
 
@@ -1144,6 +1162,32 @@ button {
   flex-direction: column;
   gap: var(--space-5);
   align-items: flex-start;
+}
+
+/* Sized to the type, and reaching a little above it so the top edge fades
+   out over the hero's own top padding rather than banding across the photo.
+   Spans the viewport rather than the container; .hero clips it. */
+.hero-content::before {
+  content: "";
+  position: absolute;
+  top: -15%;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  z-index: -1;
+  background: var(--scrim-hero);
+  pointer-events: none;
+}
+
+/* Once there's room beside the type, let the scrim fall away to the right so
+   the photograph is still a photograph. The type never reaches past about
+   200px right of centre at any width, hence the stops. */
+@media (min-width: 900px) {
+  .hero-content::before {
+    -webkit-mask-image: linear-gradient(to right, #000 0 calc(50% + 200px), transparent calc(50% + 600px));
+    mask-image: linear-gradient(to right, #000 0 calc(50% + 200px), transparent calc(50% + 600px));
+  }
 }
 
 .hero-content .eyebrow {
@@ -1222,7 +1266,9 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: .28;
+  /* .28 let a bright photo lift the navy far enough that muted body copy
+     dropped under 4.5:1. */
+  opacity: .16;
 }
 
 .hero-wash .container {
@@ -1272,20 +1318,15 @@ button {
   white-space: nowrap;
 }
 
+/* Was a red / green / gold dot. A dot can't hold the necker's proportions
+   and a black one is invisible on ink, so the separator is a small necker
+   instead: one mark, all three colours, the fabric's own 64/18/18. */
 .marquee i {
-  width: 10px;
-  height: 10px;
+  width: 40px;
+  height: var(--necker-height);
   flex: none;
   border-radius: var(--radius-pill);
-  background: var(--necker-red);
-}
-
-.marquee i:nth-of-type(3n + 2) {
-  background: var(--necker-green);
-}
-
-.marquee i:nth-of-type(3n) {
-  background: var(--triffid-gold);
+  background: var(--necker-on-dark);
 }
 
 .marquee-purple {
