@@ -205,10 +205,11 @@
 
   /* The necker, in the fabric's own proportions: 64% black body, then green
      and red on the outer edge. Same ratio on every surface. On navy or ink
-     the black band would otherwise disappear, so .necker-on-dark keeps the
-     ratio and gives the black band its edge back with a hairline. */
+     the black band would disappear into the background, so on dark it is
+     lifted just far enough to read — the proportions never change. */
   --necker: linear-gradient(90deg, var(--necker-black) 0 64%, var(--necker-green) 64% 82%, var(--necker-red) 82% 100%);
-  --necker-edge-on-dark: inset 0 0 0 1px rgba(255, 255, 255, .38);
+  --necker-black-on-dark: #4a4547;
+  --necker-on-dark: linear-gradient(90deg, var(--necker-black-on-dark) 0 64%, var(--necker-green) 64% 82%, var(--necker-red) 82% 100%);
   --necker-height: 6px;
 
   /* --- Motion --- */
@@ -668,7 +669,7 @@ button {
 }
 
 .necker-on-dark {
-  box-shadow: var(--necker-edge-on-dark);
+  background: var(--necker-on-dark);
 }
 
 /* The 72px rule under a section eyebrow. */
@@ -685,7 +686,7 @@ button {
 .section-brand .necker-rule,
 .section-ink .necker-rule,
 .necker-rule.necker-on-dark {
-  box-shadow: var(--necker-edge-on-dark);
+  background: var(--necker-on-dark);
 }
 
 /* Badges: small uppercase pills. */
@@ -1317,20 +1318,15 @@ button {
   white-space: nowrap;
 }
 
+/* Was a red / green / gold dot. A dot can't hold the necker's proportions
+   and a black one is invisible on ink, so the separator is a small necker
+   instead: one mark, all three colours, the fabric's own 64/18/18. */
 .marquee i {
-  width: 10px;
-  height: 10px;
+  width: 40px;
+  height: var(--necker-height);
   flex: none;
   border-radius: var(--radius-pill);
-  background: var(--necker-red);
-}
-
-.marquee i:nth-of-type(3n + 2) {
-  background: var(--necker-green);
-}
-
-.marquee i:nth-of-type(3n) {
-  background: var(--triffid-gold);
+  background: var(--necker-on-dark);
 }
 
 .marquee-purple {
