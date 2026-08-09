@@ -18,11 +18,9 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="en_GB">
   <meta property="og:site_name" content="Triffid Explorer Scouts">
-  <meta property="og:image" content="https://www.triffidesu.co.uk/images/og-image.jpg">
+  <meta property="og:image" content="https://www.triffidesu.co.uk/images/og/join.jpg">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800;6..12,900&display=swap" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" href="fonts/nunito-sans-latin.woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <script type="application/ld+json">
   {
@@ -132,7 +130,7 @@
     <span class="necker" aria-hidden="true"></span>
     <nav class="nav-wrapper" aria-label="Main navigation">
       <a href="index.html" class="nav-logo">
-        <img src="images/triffid%20logo.png" alt="Triffid Explorer Scouts logo" width="46" height="46">
+        <img srcset="images/triffid%20logo-128.webp 128w" sizes="64px" src="images/triffid%20logo-128.webp" alt="Triffid Explorer Scouts logo" width="46" height="46">
         <span>Triffid Explorers</span>
       </a>
       <ul class="nav-links" id="navLinks">
@@ -155,7 +153,7 @@
   <main id="main">
     <!-- HERO: navy with a photo wash rather than a full-bleed image -->
     <section class="hero-wash">
-      <img src="images/bike ride 2.jpg" alt="" width="1440" height="1080" fetchpriority="high">
+      <img srcset="images/bike%20ride%202-320.webp 320w, images/bike%20ride%202-480.webp 480w, images/bike%20ride%202-640.webp 640w, images/bike%20ride%202-800.webp 800w, images/bike%20ride%202-1080.webp 1080w, images/bike%20ride%202-1440.webp 1440w" sizes="100vw" src="images/bike%20ride%202-1440.webp" alt="" width="1440" height="1080" fetchpriority="high">
       <div class="container">
         <div class="stack">
           <span class="necker-rule necker-on-dark" aria-hidden="true" style="width: 90px;"></span>
@@ -215,7 +213,7 @@
           <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));">
             <article class="activity-card">
               <div class="activity-card-media">
-                <img src="images/first aid.jpg" data-topic="skills" alt="Explorers with emergency aid certificates" width="1440" height="1080" loading="lazy">
+                <img srcset="images/first%20aid-320.webp 320w, images/first%20aid-480.webp 480w, images/first%20aid-640.webp 640w, images/first%20aid-800.webp 800w, images/first%20aid-1080.webp 1080w, images/first%20aid-1440.webp 1440w, images/first%20aid-1920.webp 1920w, images/first%20aid-2048.webp 2048w" sizes="(min-width: 900px) 498px, 90vw" src="images/first%20aid-2048.webp" data-topic="skills" alt="Explorers with emergency aid certificates" width="1440" height="1080" loading="lazy">
                 <span class="badge badge-sm badge-red">Stage 4</span>
               </div>
               <div class="activity-card-body">
@@ -225,7 +223,7 @@
             </article>
             <article class="activity-card">
               <div class="activity-card-media">
-                <img src="images/bike ride.jpg" data-topic="daysout" alt="Mountain biking through the Shropshire countryside" width="1440" height="1085" loading="lazy">
+                <img srcset="images/bike%20ride-320.webp 320w, images/bike%20ride-480.webp 480w, images/bike%20ride-640.webp 640w, images/bike%20ride-800.webp 800w, images/bike%20ride-996.webp 996w" sizes="(min-width: 900px) 498px, 90vw" src="images/bike%20ride-996.webp" data-topic="daysout" alt="Mountain biking through the Shropshire countryside" width="1440" height="1085" loading="lazy">
               </div>
               <div class="activity-card-body">
                 <h3>Big adventures</h3>
@@ -346,7 +344,7 @@
     <span class="necker necker-on-dark" aria-hidden="true"></span>
     <div class="footer-grid">
       <div class="footer-about">
-        <img src="images/triffid%20logo.png" alt="Triffid Explorer Scouts" class="footer-logo" width="64" height="64">
+        <img srcset="images/triffid%20logo-128.webp 128w" sizes="64px" src="images/triffid%20logo-128.webp" alt="Triffid Explorer Scouts" class="footer-logo" width="64" height="64">
         <h3>Triffid Explorer Scouts</h3>
         <p>Adventure, teamwork, and memories that last. Explorer Scouts in Ludlow for 14&ndash;18 year olds.</p>
         <div class="social-links">
@@ -361,6 +359,7 @@
           <li><a href="index.html#activities">Activities</a></li>
           <li><a href="index.html#programme">Programme</a></li>
           <li><a href="dofe.html">Duke of Edinburgh</a></li>
+          <li><a href="dofe-kit-list.html">DofE Kit List</a></li>
           <li><a href="badges.html">Badges</a></li>
           <li><a href="join.html">Join Us</a></li>
           <li><a href="moving-up.html">Moving Up from Scouts</a></li>
@@ -384,7 +383,7 @@
         <p>&copy; 2026 Triffid Explorer Scouts. Part of <a href="https://www.scouts.org.uk" target="_blank" rel="noopener noreferrer">The Scout Association</a>. <a href="privacy.html">Privacy and photographs</a>. Website by <a href="https://fresh-tech.uk" target="_blank" rel="noopener noreferrer">Fresh Tech</a>.</p>
         <!-- POR 2e.2.7.4: the official Scouts logo, localised with the unit name beneath. -->
         <span class="scouts-lockup">
-          <img src="images/scouts/scouts-logo-stacked-white.png" alt="Scouts" width="74" height="54" loading="lazy">
+          <img srcset="images/scouts/scouts-logo-stacked-white-148.webp 148w" sizes="74px" src="images/scouts/scouts-logo-stacked-white-148.webp" alt="Scouts" width="74" height="54" loading="lazy">
           <span>Triffid Explorer Scout Unit</span>
         </span>
       </div>
