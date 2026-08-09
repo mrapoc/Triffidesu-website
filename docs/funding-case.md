@@ -77,6 +77,9 @@ month cover the ordinary running of a Monday night; everything beyond that comes
 from grants, donations and families. Equipment is bought once, owned by the unit,
 and used by every Explorer who comes afterwards.
 
+Even this website costs the unit nothing. A local firm, Fresh Tech, built it
+free of charge and continues to host, maintain and add to it for nothing.
+
 We also run the Duke of Edinburgh's Award as a licensed centre, at £33.50 for
 Bronze against the £150 to £600 most schools charge for the same award, which
 puts it within reach of families for whom the school route is not.
