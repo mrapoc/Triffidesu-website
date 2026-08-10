@@ -1,4 +1,10 @@
-/bring-a-mate         /bring-a-mate.html        200
-/moving-up            /moving-up.html           200
-/dofe                 /dofe.html                200
-/join                 /join.html                200
+# Tidy URLs for the pages people are most likely to type or share.
+#
+# These are 301s rather than 200 rewrites on purpose. A rewrite serves the same
+# page at two addresses, which leaves Google consolidating duplicates for us and
+# reporting each one as "Alternate page with proper canonical tag". A redirect
+# settles it at the server instead, so there is one address per page.
+/bring-a-mate         /bring-a-mate.html        301
+/moving-up            /moving-up.html           301
+/dofe                 /dofe.html                301
+/join                 /join.html                301
