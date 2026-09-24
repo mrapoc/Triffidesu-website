@@ -80,6 +80,27 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  // Both feeds fill sections below the fold, so they wait until the page has
+  // painted: the first screen's photo shouldn't share the connection with them.
+  function afterFirstPaint(fn) {
+    function start() {
+      requestAnimationFrame(function () { setTimeout(fn, 0); });
+    }
+    if (document.readyState === 'complete') {
+      start();
+    } else {
+      window.addEventListener('load', start);
+    }
+  }
+
+  // The build holds back photos below the fold as data-src (see
+  // scripts/build.mjs). Release them once the first screen has painted; they
+  // keep loading="lazy", so the browser still fetches them only as they near
+  // the screen. Photos a topic may replace wait for the Instagram feed instead.
+  afterFirstPaint(function () {
+    document.querySelectorAll('img[data-src]:not([data-topic]):not([data-tag])').forEach(loadOriginal);
+  });
+
   function escapeHtml(str) {
     var div = document.createElement('div');
     div.textContent = str;
@@ -87,34 +108,28 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ===== PROGRAMME CALENDAR =====
-  // Synced from Online Scout Manager. The Netlify function proxies the iCal
-  // feed to dodge CORS; corsproxy.io is the backstop if the function is down.
+  // Synced from Online Scout Manager. server/calendar.php relays the iCal feed
+  // (OSM doesn't allow cross-site reads) and keeps a copy for when OSM is down.
   var calendarEl = document.getElementById('programme-calendar');
   if (calendarEl) {
     var ICAL_URL = 'https://www.onlinescoutmanager.co.uk/ext/cal/?f=308716.NzM0YWQxYmU1YmI4YWVmZjg3NTdkMTc1NjdkMDI4MTdkZTBhNzU1YjRkNzFlZGJiOTFhNzYwMjk0NDMyNDg1NGQzNTY2NmFlZTUzODY2MWVhNDg2OGVjZjJlNjllZjZlMmQ4NmM0ZGJkNzM4YzgzMzAwMzgwOGQxYjc5MzVhYWU%3D.K6K061eQr9';
 
-    fetch('/.netlify/functions/calendar')
-      .then(function (res) {
-        if (!res.ok) throw new Error('Function failed');
-        return res.text();
-      })
-      .then(function (icalData) {
-        if (!icalData || !icalData.includes('BEGIN:VCALENDAR')) throw new Error('Invalid data');
-        renderProgramme(parseICal(icalData), calendarEl);
-      })
-      .catch(function () {
-        return fetch('https://corsproxy.io/?' + encodeURIComponent(ICAL_URL))
-          .then(function (res) { return res.text(); })
-          .then(function (icalData) {
-            if (!icalData || !icalData.includes('BEGIN:VCALENDAR')) throw new Error('Invalid data');
-            renderProgramme(parseICal(icalData), calendarEl);
-          });
-      })
-      .catch(function () {
-        calendarEl.innerHTML = '<p class="programme-empty">Unable to load the programme. ' +
-          '<a href="' + ICAL_URL + '" target="_blank" rel="noopener noreferrer">Subscribe to our calendar</a> ' +
-          'or check our <a href="https://www.facebook.com/triffidesu" target="_blank" rel="noopener noreferrer">Facebook page</a> for upcoming events.</p>';
-      });
+    afterFirstPaint(function () {
+      fetch('/api/calendar')
+        .then(function (res) {
+          if (!res.ok) throw new Error('Programme unavailable');
+          return res.text();
+        })
+        .then(function (icalData) {
+          if (!icalData || !icalData.includes('BEGIN:VCALENDAR')) throw new Error('Invalid data');
+          renderProgramme(parseICal(icalData), calendarEl);
+        })
+        .catch(function () {
+          calendarEl.innerHTML = '<p class="programme-empty">Unable to load the programme. ' +
+            '<a href="' + ICAL_URL + '" target="_blank" rel="noopener noreferrer">Subscribe to our calendar</a> ' +
+            'or check our <a href="https://www.facebook.com/triffidesu" target="_blank" rel="noopener noreferrer">Facebook page</a> for upcoming events.</p>';
+        });
+    });
   }
 
   function parseICal(data) {
@@ -193,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
         '<span class="month">' + months[ev.start.getMonth()] + '</span>' +
         '</div>' +
         '<div class="programme-details">' +
-        '<h4>' + escapeHtml(ev.summary) + '</h4>' +
+        '<h3>' + escapeHtml(ev.summary) + '</h3>' +
         '<span class="programme-time">' + meta + '</span>' +
         '</div>' +
         (isNext ? '<span class="programme-badge">Next</span>' : '') +
@@ -228,6 +243,14 @@ document.addEventListener('DOMContentLoaded', function () {
   // Captions run long. The featured card shows this much, then hands off to
   // the lightbox for the rest rather than to Instagram.
   var FEATURED_CAPTION_LENGTH = 500;
+
+  // How wide each kind of photo is drawn, so the browser picks the right file
+  // from the widths server/instagram.php saved.
+  var SIZES_TILE = '(min-width: 1180px) 270px, (min-width: 540px) 45vw, calc(100vw - 40px)';
+  var SIZES_FEATURED = '(min-width: 900px) 540px, calc(100vw - 40px)';
+  var SIZES_THUMB = '80px';
+  var SIZES_LIGHTBOX = '(min-width: 900px) 60vw, 100vw';
+  var SIZES_ACTIVITY = '(min-width: 900px) 332px, 90vw';
 
   // Corner badges, in Instagram's own visual language.
   var BADGE_VIDEO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
@@ -299,29 +322,32 @@ document.addEventListener('DOMContentLoaded', function () {
   var hasTagged = document.querySelector('[data-topic], [data-tag], .tag-feed, #gallery-grid');
 
   if (newsContainer || feedContainer || hasTagged) {
-    fetch('/.netlify/functions/instagram')
-      .then(function (res) {
-        if (!res.ok) throw new Error('Instagram feed unavailable');
-        return res.json();
-      })
-      .then(function (data) {
-        var posts = (data && data.posts) || [];
-        if (!posts.length) throw new Error('No posts returned');
-        feedPosts = posts;
-        if (newsContainer) populateLatestNews(posts[0]);
-        // The featured post leads the news section, so keep it out of the grid.
-        if (feedContainer) populateInstagramFeed(posts.slice(1, 1 + MAX_GRID_TILES), 1);
-        populateTagged();
-        populateGallery();
-        reportTagRouting();
-      })
-      .catch(function () {
-        showSocialFallback();
-        removeEl('gallery-loading');
-        showEl('gallery-fallback');
-        // Static photos stay as they are; drop any strip that can't be filled.
-        document.querySelectorAll('.tag-feed').forEach(dropTagFeed);
-      });
+    afterFirstPaint(function () {
+      fetch('/data/instagram.json')
+        .then(function (res) {
+          if (!res.ok) throw new Error('Instagram feed unavailable');
+          return res.json();
+        })
+        .then(function (data) {
+          var posts = (data && data.posts) || [];
+          if (!posts.length) throw new Error('No posts returned');
+          feedPosts = posts;
+          if (newsContainer) populateLatestNews(posts[0]);
+          // The featured post leads the news section, so keep it out of the grid.
+          if (feedContainer) populateInstagramFeed(posts.slice(1, 1 + MAX_GRID_TILES), 1);
+          populateTagged();
+          populateGallery();
+          reportTagRouting();
+        })
+        .catch(function () {
+          showSocialFallback();
+          removeEl('gallery-loading');
+          showEl('gallery-fallback');
+          // Static photos stay as they are; drop any strip that can't be filled.
+          document.querySelectorAll('img[data-src]').forEach(loadOriginal);
+          document.querySelectorAll('.tag-feed').forEach(dropTagFeed);
+        });
+    });
   }
 
   function removeEl(id) {
@@ -366,6 +392,20 @@ document.addEventListener('DOMContentLoaded', function () {
     var lastSpace = cut.lastIndexOf(' ');
     if (lastSpace > maxLength * 0.6) cut = cut.slice(0, lastSpace);
     return cut.trim() + '…';
+  }
+
+  // Attributes for one photo: every saved width, so small tiles get small files,
+  // and its real dimensions, so nothing jumps about as it loads.
+  function imgAttrs(image, alt, sizes) {
+    var html = 'src="' + escapeHtml(image.src) + '"';
+    if (image.srcset) html += ' srcset="' + escapeHtml(image.srcset) + '" sizes="' + sizes + '"';
+    if (image.width) html += ' width="' + image.width + '" height="' + image.height + '"';
+    return html + ' alt="' + escapeHtml(alt) + '"';
+  }
+
+  // Where a tile links: the post's own page on this site.
+  function postHref(post) {
+    return escapeHtml(post.url || post.permalink);
   }
 
   function formatPostDate(timestamp) {
@@ -421,15 +461,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (images.length) {
       html += '<div class="two-col-image">';
       html += '  <button type="button" class="news-image-open" aria-label="Open this post">';
-      html += '    <img id="latest-news-image" src="' + escapeHtml(images[0]) + '" alt="' + escapeHtml(altText) + '">';
+      html += '    <img id="latest-news-image" ' + imgAttrs(images[0], altText, SIZES_FEATURED) + '>';
       html += '  </button>';
       // A carousel gets its slides as a thumbnail strip under the main image.
       if (images.length > 1) {
         html += '  <div class="news-gallery" role="group" aria-label="Photos from this post">';
         images.forEach(function (src, i) {
           html += '<button type="button" class="news-gallery-thumb' + (i === 0 ? ' is-current' : '') + '"' +
-            ' data-src="' + escapeHtml(src) + '" data-slide="' + i + '" aria-label="Show photo ' + (i + 1) + ' of ' + images.length + '">' +
-            '<img src="' + escapeHtml(src) + '" alt="" loading="lazy"></button>';
+            ' data-slide="' + i + '" aria-label="Show photo ' + (i + 1) + ' of ' + images.length + '">' +
+            '<img ' + imgAttrs(src, '', SIZES_THUMB) + ' loading="lazy"></button>';
         });
         html += '  </div>';
       }
@@ -462,11 +502,12 @@ document.addEventListener('DOMContentLoaded', function () {
   function wireNewsGallery(container) {
     var main = container.querySelector('#latest-news-image');
     var thumbs = container.querySelectorAll('.news-gallery-thumb');
+    var images = imagesOf(feedPosts[0]);
     if (!main) return;
 
     thumbs.forEach(function (thumb) {
       thumb.addEventListener('click', function () {
-        main.src = thumb.getAttribute('data-src');
+        showImage(main, images[parseInt(thumb.getAttribute('data-slide'), 10) || 0], SIZES_FEATURED);
         // Opening the post from here should land on the slide being looked at.
         main.setAttribute('data-slide', thumb.getAttribute('data-slide') || '0');
         thumbs.forEach(function (other) { other.classList.remove('is-current'); });
@@ -475,10 +516,24 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Posts synced before multi-image support only carry a single `image`.
   function imagesOf(post) {
-    if (post.images && post.images.length) return post.images;
-    return post.image ? [post.image] : [];
+    return (post && post.images) || [];
+  }
+
+  // Swaps the photo an existing <img> shows. srcset has to change with src, or
+  // the browser carries on showing whichever file it picked from the old one.
+  function showImage(img, image, sizes) {
+    if (image.srcset) {
+      img.sizes = sizes;
+      img.srcset = image.srcset;
+    } else {
+      img.removeAttribute('srcset');
+    }
+    img.src = image.src;
+    if (image.width) {
+      img.width = image.width;
+      img.height = image.height;
+    }
   }
 
   function populateInstagramFeed(posts, indexOffset) {
@@ -506,9 +561,8 @@ document.addEventListener('DOMContentLoaded', function () {
       var slides = imagesOf(post).length;
       var extra = i >= TILES_BEFORE_MORE ? ' is-hidden' : '';
 
-      return '<a class="instagram-post' + extra + '" data-post="' + entry.feedIndex + '"' +
-        ' href="' + escapeHtml(post.permalink) + '" target="_blank" rel="noopener noreferrer">' +
-        '<img src="' + escapeHtml(post.image) + '" alt="' + escapeHtml(alt) + '" loading="lazy">' +
+      return '<a class="instagram-post' + extra + '" data-post="' + entry.feedIndex + '" href="' + postHref(post) + '">' +
+        '<img ' + imgAttrs(post.image, alt, SIZES_TILE) + ' loading="lazy">' +
         typeBadge(post, slides) +
         (caption ? '<span class="instagram-post-caption">' + escapeHtml(truncate(caption, 140)) + '</span>' : '') +
         '</a>';
@@ -609,15 +663,29 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Nothing left that isn't already on screen. The original photo beats
-    // showing the same shot twice, so leave the card alone.
-    if (!post) return;
+    // showing the same shot twice.
+    if (!post) {
+      loadOriginal(img);
+      return;
+    }
 
     claim(post);
     var index = indexOfPost(post);
-    img.src = post.image;
+    showImage(img, post.image, SIZES_ACTIVITY);
+    img.removeAttribute('data-src');
+    img.removeAttribute('data-srcset');
     img.classList.add('is-live');
     img.setAttribute('alt', altFor(post, img.getAttribute('alt')));
     img.addEventListener('click', function () { openLightbox(index, 0); });
+  }
+
+  // Shows a held-back photo's own file (see the build note above).
+  function loadOriginal(img) {
+    if (!img.hasAttribute('data-src')) return;
+    if (img.hasAttribute('data-srcset')) img.srcset = img.getAttribute('data-srcset');
+    img.src = img.getAttribute('data-src');
+    img.removeAttribute('data-src');
+    img.removeAttribute('data-srcset');
   }
 
   // A section marked data-tag-section exists only to show its strip, so it goes
@@ -651,9 +719,8 @@ document.addEventListener('DOMContentLoaded', function () {
       var alt = altFor(post, 'Photo from Triffid Explorers');
       var slides = imagesOf(post).length;
 
-      return '<a class="instagram-post" data-post="' + indexOfPost(post) + '"' +
-        ' href="' + escapeHtml(post.permalink) + '" target="_blank" rel="noopener noreferrer">' +
-        '<img src="' + escapeHtml(post.image) + '" alt="' + escapeHtml(alt) + '" loading="lazy">' +
+      return '<a class="instagram-post" data-post="' + indexOfPost(post) + '" href="' + postHref(post) + '">' +
+        '<img ' + imgAttrs(post.image, alt, SIZES_TILE) + ' loading="lazy">' +
         typeBadge(post, slides) + '</a>';
     }).join('');
 
@@ -754,8 +821,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var photos = [];
     matches.forEach(function (post) {
       var index = indexOfPost(post);
-      imagesOf(post).forEach(function (src, slide) {
-        photos.push({ post: post, index: index, slide: slide, src: src });
+      imagesOf(post).forEach(function (image, slide) {
+        photos.push({ post: post, index: index, slide: slide, image: image });
       });
     });
 
@@ -764,9 +831,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     grid.innerHTML = photos.map(function (photo, i) {
       return '<a class="instagram-post' + (i >= GALLERY_PAGE_SIZE ? ' is-hidden' : '') + '"' +
-        ' data-post="' + photo.index + '" data-slide="' + photo.slide + '"' +
-        ' href="' + escapeHtml(photo.post.permalink) + '" target="_blank" rel="noopener noreferrer">' +
-        '<img src="' + escapeHtml(photo.src) + '" alt="' + escapeHtml(altFor(photo.post)) + '" loading="lazy">' +
+        ' data-post="' + photo.index + '" data-slide="' + photo.slide + '" href="' + postHref(photo.post) + '">' +
+        '<img ' + imgAttrs(photo.image, altFor(photo.post), SIZES_TILE) + ' loading="lazy">' +
         '</a>';
     }).join('');
 
@@ -891,7 +957,7 @@ document.addEventListener('DOMContentLoaded', function () {
     lightboxSlide = (index + images.length) % images.length;
 
     var img = lightbox.querySelector('.lightbox-image');
-    img.src = images[lightboxSlide];
+    showImage(img, images[lightboxSlide], SIZES_LIGHTBOX);
     img.alt = altFor(lightboxPost, 'Photo from Triffid Explorers');
 
     lightbox.querySelectorAll('.lightbox-dot').forEach(function (dot, i) {
@@ -934,8 +1000,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Plain clicks open the post here; the anchor stays a real link so middle
-  // click, ctrl-click and no-JS all still reach Instagram.
+  // Plain clicks open the post here; the anchor stays a real link to the post's
+  // own page, so middle click, ctrl-click and no-JS all still work.
   function openInPage(e, postIndex, slideIndex) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
