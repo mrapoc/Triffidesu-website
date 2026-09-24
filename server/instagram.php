@@ -225,20 +225,18 @@ function ig_is_local(array $record): bool
         && is_file(ig_media_dir() . '/' . substr($record['src'], strlen(IG_MEDIA_PATH)));
 }
 
-// Downloads one photo and saves it at each width. Returns null on any failure.
-function ig_store_image(string $remoteUrl, string $key): ?array
+// Downloads one photo and saves it at each width. Throws with the reason if it
+// can't, which the sync reports rather than swallowing.
+function ig_store_image(string $remoteUrl, string $key): array
 {
-    if (!function_exists('imagecreatefromstring')) return null;
+    if (!function_exists('imagecreatefromstring')) throw new RuntimeException('PHP has no GD extension');
 
-    try {
-        [$status, $type, $body] = triffid_http_get($remoteUrl, 15, IG_MAX_IMAGE_BYTES);
-    } catch (Throwable) {
-        return null;
-    }
-    if ($status !== 200 || !str_starts_with($type, 'image/') || !getimagesizefromstring($body)) return null;
+    [$status, $type, $body] = triffid_http_get($remoteUrl, 15, IG_MAX_IMAGE_BYTES);
+    if ($status !== 200) throw new RuntimeException("Photo download returned $status");
+    if (!str_starts_with($type, 'image/') || !getimagesizefromstring($body)) throw new RuntimeException("Photo download wasn't an image ($type)");
 
     $source = @imagecreatefromstring($body);
-    if (!$source) return null;
+    if (!$source) throw new RuntimeException("GD couldn't read a $type photo");
 
     $w = imagesx($source);
     $h = imagesy($source);
@@ -252,13 +250,13 @@ function ig_store_image(string $remoteUrl, string $key): ?array
 
     foreach ($widths as $target) {
         $scaled = $target === $w ? $source : imagescale($source, $target, (int) round($h * $target / $w), IMG_BICUBIC);
-        if (!$scaled) return null;
+        if (!$scaled) throw new RuntimeException("GD couldn't resize a photo to $target");
         $path = ig_media_dir() . "/$key-$target.$ext";
         $tmp = "$path.tmp";
-        $ok = $webp ? imagewebp($scaled, $tmp, 78) : imagejpeg($scaled, $tmp, 80);
+        $ok = $webp ? @imagewebp($scaled, $tmp, 78) : @imagejpeg($scaled, $tmp, 80);
         if (!$ok || !rename($tmp, $path)) {
             @unlink($tmp);
-            return null;
+            throw new RuntimeException('Cannot write ' . basename($path) . ' to instagram-media/');
         }
         chmod($path, 0644);
     }
@@ -278,7 +276,12 @@ function ig_images_for(array $post, ?array $previous): array
 
     $records = [];
     foreach ($post['remoteImages'] as $index => $remote) {
-        $records[] = ig_store_image($remote, $post['id'] . '-' . $index) ?? ig_remote_record($remote);
+        try {
+            $records[] = ig_store_image($remote, $post['id'] . '-' . $index);
+        } catch (Throwable $e) {
+            $GLOBALS['ig_photo_errors'][] = $e->getMessage();
+            $records[] = ig_remote_record($remote);
+        }
     }
     return $records;
 }

@@ -123,6 +123,7 @@ check(str_contains($posts[0]['images'][0]['srcset'], '-320.webp 320w') && str_co
 check(is_file("$public/instagram-media/1001-0-320.webp") && is_file("$public/instagram-media/1001-0-1080.webp"), 'photo widths written');
 check($posts[1]['images'][0]['width'] === 500 && is_file("$public/instagram-media/1002-0-500.webp") && !is_file("$public/instagram-media/1002-0-640.webp"), 'small photo never enlarged');
 check($posts[2]['images'][0]['src'] === 'https://scontent.cdninstagram.com/missing.jpg', 'failed copy falls back to Instagram URL');
+check(($GLOBALS['ig_photo_errors'] ?? []) === ['Photo download returned 404'], 'failed copy reports its reason');
 
 $page = file_get_contents("$public/news/2026-08-15-what-a-week.html");
 check(str_contains($page, '<h1 class="display-2">What a week!</h1>'), 'post page heading');

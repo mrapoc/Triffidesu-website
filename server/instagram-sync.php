@@ -23,8 +23,16 @@ try {
     $posts = ig_sync();
     $status['lastSuccess'] = gmdate('c');
     $status['posts'] = count($posts);
-    unset($status['lastError'], $status['lastErrorAt']);
+    unset($status['lastError'], $status['lastErrorAt'], $status['photoError']);
     echo 'Instagram sync: stored ' . count($posts) . " posts.\n";
+
+    // Photos that couldn't be copied still show, from Instagram's own links,
+    // but those expire. Say so, with the first reason, so it gets fixed.
+    $photoErrors = $GLOBALS['ig_photo_errors'] ?? [];
+    if ($photoErrors) {
+        $status['photoError'] = count($photoErrors) . ' photo(s) not copied: ' . $photoErrors[0];
+        echo $status['photoError'] . "\n";
+    }
     $exit = 0;
 } catch (Throwable $e) {
     $status['lastError'] = $e->getMessage();
