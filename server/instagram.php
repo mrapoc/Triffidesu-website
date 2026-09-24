@@ -249,7 +249,13 @@ function ig_store_image(string $remoteUrl, string $key): array
     $ext = $webp ? 'webp' : 'jpg';
 
     foreach ($widths as $target) {
-        $scaled = $target === $w ? $source : imagescale($source, $target, (int) round($h * $target / $w), IMG_BICUBIC);
+        // imagecopyresampled rather than imagescale: 20i's GD build fails imagescale.
+        $scaled = $source;
+        if ($target !== $w) {
+            $th = (int) round($h * $target / $w);
+            $scaled = imagecreatetruecolor($target, $th);
+            if (!$scaled || !imagecopyresampled($scaled, $source, 0, 0, 0, 0, $target, $th, $w, $h)) $scaled = false;
+        }
         if (!$scaled) throw new RuntimeException("GD couldn't resize a photo to $target");
         $path = ig_media_dir() . "/$key-$target.$ext";
         $tmp = "$path.tmp";
