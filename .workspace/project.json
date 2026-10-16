@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "lifecycle": "active",
+  "context": [],
+  "required_paths": [
+    "AGENTS.md",
+    "DEVELOPMENT.md",
+    "package-lock.json"
+  ],
+  "commands": [
+    {
+      "cwd": ".",
+      "runner": "npm",
+      "name": "build:images"
+    }
+  ]
+}
