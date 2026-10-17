@@ -13,5 +13,6 @@
       "runner": "npm",
       "name": "build:images"
     }
-  ]
+  ],
+  "notes": "Scout group website. Wanted: automatic deploy so edits can be made from a phone."
 }
