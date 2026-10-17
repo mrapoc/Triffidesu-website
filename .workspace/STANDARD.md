@@ -28,9 +28,8 @@ facts in AGENTS.md and DEVELOPMENT.md; do not maintain a second vendor-specific 
   evidence from the running service. Archiving a conversation does not back up work.
 
 Resolve the `context` entries in .workspace/project.json under the shared Context root.
-On Sam's Windows workspace this root is `$env:USERPROFILE\Context` (equivalently
-`%USERPROFILE%\Context`). For example, `FreshTech/SuperOps` starts at
-`%USERPROFILE%\Context\FreshTech\SuperOps\README.md`. Read that area's README first,
+On both of Sam's machines this root is `~/Context` (a link to the work OneDrive).
+For example, `FreshTech/SuperOps` starts at `~/Context/FreshTech/SuperOps/README.md`. Read that area's README first,
 then follow only the references relevant to the task, including legacy locations it indexes.
 An empty context list means no external area is mapped yet; it does not prove none exists.
 Keep durable context discoveries in the project mapping and authoritative context index.

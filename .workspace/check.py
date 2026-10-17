@@ -36,7 +36,7 @@ def private_file(name: str) -> bool:
 def git(root: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(['git', '--no-optional-locks', '-c', 'core.fsmonitor=false',
                            '-C', str(root), *args], capture_output=True, timeout=30,
-                            creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+                           creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
 
 
 def audit(root: Path, tracked: list[str] | None = None) -> dict:

@@ -6,13 +6,15 @@ A static website: root-level HTML pages, shared CSS/JS and images, hosted on
 20i shared Linux hosting (Apache + PHP). There is no application framework and
 no database. Two small PHP jobs live in `server/`: the Online Scout Manager
 calendar relay and the hourly Instagram sync, which also writes a news page per
-post. How it is hosted and deployed: [docs/hosting.md](docs/hosting.md).
+post. How it is hosted: [docs/hosting.md](docs/hosting.md). Merging to `main` publishes
+it to 20i through GitHub Actions: [docs/publishing.md](docs/publishing.md).
 
 ## Commands
 
 ```powershell
 npm test               # build + link check, and the PHP sync/calendar tests
 npm run build          # dist/: the exact public_html contents
+npm run build:preview  # dist/ for a Cloudflare Pages pull request preview
 npm run package        # build, then release/triffidesu-site.zip for 20i
 npm run verify:live    # read-only checks against the deployed site
 npm run build:images   # only when source images or their generation change
@@ -37,6 +39,7 @@ mbstring), loading them on a stock Windows PHP.
   mobile layouts. Lighthouse is at 100 in all four categories on desktop and
   mobile; treat a regression as a bug.
 - Never ship anything from `private/` or put a token in the repository.
+- A push or merge to `main` publishes the live site. Do it only when Sam asks.
 - Do not upload to 20i, change DNS or change live integrations unless
   explicitly requested.
 

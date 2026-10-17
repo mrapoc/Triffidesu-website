@@ -26,7 +26,9 @@ Lighthouse runs use the shared build worker (BUILD_WORKER.md) against the built
 output with synced posts; PageSpeed Insights against the live site is the final
 word, since 20i's own network and compression aren't reproduced locally.
 
-Deployment is a manual zip upload to 20i (docs/hosting.md) and needs Sam's
+Deployment is automatic: a merge to `main` runs `.github/workflows/site.yml`,
+which tests, uploads `dist/` to 20i and runs `verify:live` (docs/publishing.md).
+Merging to `main` or a manual zip upload (docs/hosting.md) needs Sam's
 authorization, as do DNS changes and anything touching the live Instagram token.
 New worktrees need their own `npm install`; `private/` config never leaves the
 host. Keep durable decisions in docs and use short handovers with branch,

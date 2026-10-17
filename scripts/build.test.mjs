@@ -37,3 +37,18 @@ test('server files and .htaccess are shipped', () => {
   }
   assert.ok(!existsSync('dist/server/tests'), 'tests not shipped');
 });
+
+// The feed hooks js/main.js looks up by ID (docs/feed-contract.md). An edit that
+// drops one empties that feed without any error, so catch it here.
+const FEED_HOOKS = {
+  'index.html': ['programme-calendar', 'latest-news', 'latest-news-fallback', 'latest-news-loading',
+    'instagram-feed', 'instagram-feed-loading', 'instagram-feed-fallback'],
+  'gallery.html': ['gallery-grid', 'gallery-filters', 'gallery-count', 'gallery-loading', 'gallery-fallback'],
+};
+
+for (const [page, ids] of Object.entries(FEED_HOOKS)) {
+  test(`${page} keeps its feed hooks`, () => {
+    const html = readFileSync(path.join('dist', page), 'utf8');
+    for (const id of ids) assert.match(html, new RegExp(`\\bid="${id}"`), `#${id} missing`);
+  });
+}

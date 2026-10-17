@@ -12,6 +12,9 @@ fresh-tech.uk. It is plain HTML plus two small PHP jobs; there is no database.
 
 ## Build an upload
 
+Normally nobody does this: merging to `main` builds and uploads automatically
+(docs/publishing.md). The zip is the fallback if GitHub Actions is unavailable.
+
 ```powershell
 npm test
 npm run package
