@@ -20,7 +20,9 @@
   <meta property="og:site_name" content="Triffid Explorer Scouts">
   <meta property="og:image" content="https://www.triffidesu.co.uk/images/og/dofe.jpg">
 
-  <link rel="preload" as="font" type="font/woff2" href="fonts/nunito-sans-latin.woff2" crossorigin>
+  <link rel="preload" as="image" fetchpriority="high" href="images/map%20reading-hero-m-486.webp" imagesrcset="images/map%20reading-hero-m-360.webp 360w, images/map%20reading-hero-m-486.webp 486w" imagesizes="50vw" media="(max-width: 480px)">
+  <link rel="preload" as="image" fetchpriority="high" media="(min-width: 481px)" href="images/map%20reading-1536.webp" imagesrcset="images/map%20reading-320.webp 320w, images/map%20reading-hero-480.webp 480w, images/map%20reading-hero-640.webp 640w, images/map%20reading-hero-800.webp 800w, images/map%20reading-hero-1080.webp 1080w, images/map%20reading-1440.webp 1440w, images/map%20reading-1536.webp 1536w" imagesizes="100vw">
+  <link rel="preload" as="font" type="font/woff2" href="fonts/nunito-sans-wght-latin.woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <script type="application/ld+json">
   {
@@ -79,7 +81,11 @@
   <main id="main">
     <!-- HERO -->
     <section class="hero-wash">
-      <img srcset="images/map%20reading-320.webp 320w, images/map%20reading-480.webp 480w, images/map%20reading-640.webp 640w, images/map%20reading-800.webp 800w, images/map%20reading-1080.webp 1080w, images/map%20reading-1440.webp 1440w, images/map%20reading-1536.webp 1536w" sizes="100vw" src="images/map%20reading-1536.webp" alt="" width="1536" height="2048" fetchpriority="high">
+      <!-- Phones get just the central strip of the photo, which is all a portrait screen shows. -->
+      <picture>
+        <source media="(max-width: 480px)" srcset="images/map%20reading-hero-m-360.webp 360w, images/map%20reading-hero-m-486.webp 486w" sizes="50vw">
+        <img srcset="images/map%20reading-320.webp 320w, images/map%20reading-hero-480.webp 480w, images/map%20reading-hero-640.webp 640w, images/map%20reading-hero-800.webp 800w, images/map%20reading-hero-1080.webp 1080w, images/map%20reading-1440.webp 1440w, images/map%20reading-1536.webp 1536w" sizes="100vw" src="images/map%20reading-1536.webp" alt="" width="1536" height="2048" fetchpriority="high">
+      </picture>
       <div class="container">
         <div class="stack">
           <span class="necker-rule necker-on-dark" aria-hidden="true" style="width: 90px;"></span>
@@ -265,6 +271,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="index.html#activities">Activities</a></li>
           <li><a href="index.html#programme">Programme</a></li>
+          <li><a href="news/">News</a></li>
           <li><a href="dofe.html">Duke of Edinburgh</a></li>
           <li><a href="dofe-kit-list.html">DofE Kit List</a></li>
           <li><a href="dofe-without-school.html">DofE Without School</a></li>

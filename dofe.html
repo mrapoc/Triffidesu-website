@@ -20,8 +20,9 @@
   <meta property="og:site_name" content="Triffid Explorer Scouts">
   <meta property="og:image" content="https://www.triffidesu.co.uk/images/og/dofe.jpg">
 
-  <link rel="preload" as="image" href="images/remembrance-1440.webp" imagesrcset="images/remembrance-320.webp 320w, images/remembrance-480.webp 480w, images/remembrance-640.webp 640w, images/remembrance-800.webp 800w, images/remembrance-1080.webp 1080w, images/remembrance-1440.webp 1440w" imagesizes="100vw">
-  <link rel="preload" as="font" type="font/woff2" href="fonts/nunito-sans-latin.woff2" crossorigin>
+  <link rel="preload" as="image" fetchpriority="high" href="images/remembrance-hero-m-486.webp" imagesrcset="images/remembrance-hero-m-360.webp 360w, images/remembrance-hero-m-486.webp 486w" imagesizes="50vw" media="(max-width: 480px)">
+  <link rel="preload" as="image" fetchpriority="high" media="(min-width: 481px)" href="images/remembrance-1440.webp" imagesrcset="images/remembrance-320.webp 320w, images/remembrance-hero-480.webp 480w, images/remembrance-hero-640.webp 640w, images/remembrance-hero-800.webp 800w, images/remembrance-hero-1080.webp 1080w, images/remembrance-1440.webp 1440w" imagesizes="100vw">
+  <link rel="preload" as="font" type="font/woff2" href="fonts/nunito-sans-wght-latin.woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
 
   <script type="application/ld+json">
@@ -144,7 +145,11 @@
   <main id="main">
     <!-- HERO -->
     <section class="hero hero-compact">
-      <img srcset="images/remembrance-320.webp 320w, images/remembrance-480.webp 480w, images/remembrance-640.webp 640w, images/remembrance-800.webp 800w, images/remembrance-1080.webp 1080w, images/remembrance-1440.webp 1440w" sizes="100vw" class="hero-media" src="images/remembrance-1440.webp" alt="Triffid Explorers on a hilltop with a flag, showing the kind of outdoor expeditions they undertake" width="1440" height="1080" fetchpriority="high">
+      <!-- Phones get just the central strip of the photo, which is all a portrait screen shows. -->
+      <picture>
+        <source media="(max-width: 480px)" srcset="images/remembrance-hero-m-360.webp 360w, images/remembrance-hero-m-486.webp 486w" sizes="50vw">
+        <img srcset="images/remembrance-320.webp 320w, images/remembrance-hero-480.webp 480w, images/remembrance-hero-640.webp 640w, images/remembrance-hero-800.webp 800w, images/remembrance-hero-1080.webp 1080w, images/remembrance-1440.webp 1440w" sizes="100vw" class="hero-media" src="images/remembrance-1440.webp" alt="Triffid Explorers on a hilltop with a flag, showing the kind of outdoor expeditions they undertake" width="1440" height="1080" fetchpriority="high">
+      </picture>
       <div class="hero-content">
         <span class="eyebrow">Licensed DofE centre</span>
         <h1>Duke of Edinburgh in Ludlow, done the proper way</h1>
@@ -467,6 +472,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="index.html#activities">Activities</a></li>
           <li><a href="index.html#programme">Programme</a></li>
+          <li><a href="news/">News</a></li>
           <li><a href="dofe.html">Duke of Edinburgh</a></li>
           <li><a href="dofe-kit-list.html">DofE Kit List</a></li>
           <li><a href="dofe-without-school.html">DofE Without School</a></li>

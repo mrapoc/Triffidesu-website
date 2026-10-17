@@ -6,20 +6,39 @@ code changes, no re-deploy.
 
 ## How it works
 
-Everything runs on Netlify. There's no third-party feed service involved, which
-is deliberate: the previous setup used Curator.io, and when that stopped syncing
-the site went stale with no way to tell.
+Everything runs on our own 20i hosting (see [hosting.md](hosting.md)). There's
+no third-party feed service involved, which is deliberate: the previous setup
+used Curator.io, and when that stopped syncing the site went stale with no way
+to tell.
 
-1. **`netlify/functions/instagram-sync.js`** runs **every hour**. It
-   fetches our most recent posts, downloads every image — including each slide
-   of a multi-photo post — and stores the images and post details in Netlify
-   Blobs.
-2. **`netlify/functions/instagram.js`** hands that stored copy to the homepage as
-   JSON. Instagram isn't involved in a page view at all.
-3. **`netlify/functions/instagram-media.js`** serves the copied images from
-   `/instagram-media/<post id>-<slide>`, cached hard at the edge.
-4. **`js/main.js`** renders the newest post as the featured **Latest News** card
-   and the rest as the **Latest Adventures** grid.
+1. **`server/instagram-sync.php`** runs **every hour** as a 20i Scheduled Task.
+   It fetches our most recent posts and copies every photo, including each
+   slide of a multi-photo post, into `instagram-media/`, resized to 320, 480,
+   640, 800 and 1080px wide WebP so phones download small files.
+2. It writes **`data/instagram.json`**, which **`js/main.js`** reads to render
+   the newest post as the featured **Latest News** card, the rest as the
+   **Latest Adventures** grid, the gallery and the topic photos. Instagram
+   isn't involved in a page view at all.
+3. It writes **a page per post** under `news/`, plus `news/index.html` and
+   `sitemap-posts.xml`. These are what make the feed work like a blog for
+   search engines: each post has its own address, headline (the caption's
+   opening sentence), description, photos, the full caption and `BlogPosting`
+   structured data. Tiles on the site link to these pages.
+
+The code behind all three is `server/instagram.php`; the page chrome comes from
+`server/templates/page.html`, which the build inlines the stylesheet into like
+any other page.
+
+## News pages
+
+A post's address is its date plus the first words of its caption, for example
+`/news/2026-08-15-what-a-week.html`. It is fixed the first time the post is
+synced, so editing a caption on Instagram later never breaks a link.
+
+Delete a post on Instagram and the next sync removes its page and every copy of
+its photos. The old address then answers **410 Gone**, which tells search
+engines to drop it promptly. This is the route for a photograph taken down on
+request.
 
 ## Multi-photo posts
 
@@ -163,7 +182,7 @@ Two separate numbers, deliberately:
 
 | What | Where | Default |
 | --- | --- | --- |
-| How many posts are **kept** | `INSTAGRAM_POST_LIMIT` env var in Netlify | 48 |
+| How many posts are **kept** | `instagram_post_limit` in `private/triffid-config.php` | 48 |
 | Most grid tiles the homepage will ever show | `MAX_GRID_TILES` in `js/main.js` | 16 |
 | How many grid tiles show **before "Show more"** | `TILES_BEFORE_MORE` in `js/main.js` | 8 |
 | Tiles in a tagged strip | `data-count` on the strip | 4 |
@@ -176,21 +195,21 @@ available to tagged sections without ever landing on the front page.
 
 Eight is a multiple of the grid's column count — four across on desktop, two on
 mobile — so the last row is never left ragged. If you change it, a multiple of
-four keeps that tidy. To hold more history, set `INSTAGRAM_POST_LIMIT` in Netlify
-(anything above 50 is capped); no redeploy needed beyond the usual one for an
-environment variable change.
+four keeps that tidy. To hold more history, set `instagram_post_limit` in the
+private config (anything above 50 is capped); the next hourly sync picks it up.
 
 Because the posts and images are copied rather than linked, the site doesn't
 depend on Instagram staying up:
 
-- If a nightly sync fails, it leaves the stored copy alone and the site carries
-  on showing the last good set of posts. Only new posts stop appearing.
+- If a sync fails, it leaves the stored copy alone and the site carries on
+  showing the last good set of posts. Only new posts stop appearing.
 - Images are served from our own domain, so they can't break when Instagram's
   signed CDN URLs expire, and they're fast.
-- If there's no stored copy at all — the window between deploying and the first
-  sync — the feed function falls back to a live Instagram call.
-- If everything fails, the page shows the hand-written news card in `index.html`
-  and a "View our Instagram" button. No empty sections.
+- If a single photo can't be copied, that one photo points at Instagram's own
+  URL until a later sync copies it.
+- If there's no feed at all, the page shows the hand-written news card in
+  `index.html`, the original activity photos and a "View our Instagram" button.
+  No empty sections.
 
 ## One-off setup
 
@@ -258,21 +277,21 @@ hands-off; there are just more moving parts.
 
 ### Then, either way
 
-In Netlify: **Site configuration → Environment variables → Add a variable**
+Put the token in `private/triffid-config.php` on the host, the folder beside
+`public_html` (template: `hosting/triffid-config.example.php`):
 
-| Key | Value |
-| --- | --- |
-| `INSTAGRAM_ACCESS_TOKEN` | the token you generated |
+```php
+return [
+    'instagram_access_token' => 'EAA…',
+];
+```
 
-`INSTAGRAM_USER_ID` is optional. With a system user token the code finds the
-Instagram account attached to our Page by itself and remembers it; set the
-variable only to pin a specific account.
+`instagram_user_id` is optional. With a system user token the code finds the
+Instagram account attached to our Page by itself and remembers it; set it only
+to pin a specific account.
 
-Redeploy the site (Deploys → Trigger deploy) so the functions pick up the
-variable. The first nightly sync copies everything across — to not wait, run it
-by hand from **Site configuration → Functions → instagram-sync**, or with
-`netlify functions:invoke instagram-sync`. The site works in the meantime via the
-live fallback.
+The next hourly run of the Scheduled Task picks it up. There is nothing to
+redeploy.
 
 ## About the token
 
@@ -280,62 +299,50 @@ The code works out which kind of token it has from the token itself: Instagram
 Login issues `IG…` tokens, while Facebook Login and system users issue `EAA…`
 ones. They use different API hosts, and only the Instagram ones expire.
 
-**System user token (`EAA…`)** — no expiry, nothing to refresh, nothing to do.
+**System user token (`EAA…`)**: no expiry, nothing to refresh, nothing to do.
 It survives password changes and isn't tied to anyone's personal account. It can
 still be invalidated deliberately, by removing the system user, its asset
 assignments, or the app.
 
-**Page token (`EAA…`)** — also no expiry, and treated identically by the code,
+**Page token (`EAA…`)**: also no expiry, and treated identically by the code,
 which reads the Instagram link straight off the Page. It is tied to the personal
 account that generated it, so a password change or losing the Page role kills it.
 
-**Instagram Login token (`IG…`)** — expires 60 days after it was last refreshed,
-and Meta won't refresh it for you. The nightly sync exchanges it for a fresh
-60-day token once it's more than a week old, which is a wide margin. Refreshed
-tokens are stored in Netlify Blobs (store `social`, key `instagram-token`) and
-take precedence over the environment variable, so `INSTAGRAM_ACCESS_TOKEN` is
-only read until the first refresh.
+**Instagram Login token (`IG…`)**: expires 60 days after it was last refreshed,
+and Meta won't refresh it for you. The sync exchanges it for a fresh 60-day
+token once it's more than a week old. Refreshed tokens are stored in
+`private/triffid-state/instagram-token.json` and take precedence over the
+config file, which is only read until the first refresh.
 
-If a token is ever revoked outright, generate a fresh one, update
-`INSTAGRAM_ACCESS_TOKEN`, and delete the `instagram-token` blob (Netlify UI:
-**Blobs → social**) so the new variable is picked up.
+If a token is ever revoked outright, generate a fresh one, put it in the config
+file, and delete `private/triffid-state/instagram-token.json` so it is used.
 
 ## Checking it works
 
-Visit `https://triffidesu.co.uk/.netlify/functions/instagram`. A healthy response
-looks like:
+`private/triffid-state/instagram-status.json` records every run:
 
 ```json
-{
-  "posts": [
-    {
-      "id": "17912…",
-      "caption": "…",
-      "image": "/instagram-media/17912…-0",
-      "images": ["/instagram-media/17912…-0", "/instagram-media/17912…-1"],
-      "permalink": "https://www.instagram.com/p/…",
-      "timestamp": "2026-03-12T18:04:11+0000",
-      "mediaType": "CAROUSEL_ALBUM"
-    }
-  ],
-  "syncedAt": "2026-03-13T05:00:04.120Z",
-  "source": "cache"
-}
+{ "lastSuccess": "2026-09-24T14:00:03+00:00", "posts": 14 }
 ```
 
-- `"source": "cache"` means it's serving the copied posts, which is the normal
-  state. `"live"` means no sync has landed yet.
-- `syncedAt` is when the last successful sync ran. If it's more than a day or two
-  old, check the `instagram-sync` logs under **Functions** in the Netlify UI —
-  the failure reason is logged there.
-- A `502` with an `error` field means the token is missing, expired, or lacks the
-  right permission, and no copy has ever been stored. The message says which.
-- "No Instagram Business account is linked to a Page this token can see" means the
-  system user is missing an asset assignment — go back to step 3 above.
+- `lastSuccess` more than a couple of hours old means the Scheduled Task isn't
+  running (check it in My20i) or is failing.
+- `lastError` holds the reason for the most recent failure, straight from
+  Instagram: a missing, expired or under-permissioned token says so.
+- "No Instagram Business account is linked to a Page this token can see" means
+  the system user is missing an asset assignment; go back to step 3 above.
+- `tokenRefreshError` only matters for `IG…` tokens.
+
+`https://www.triffidesu.co.uk/data/instagram.json` shows what the site is
+serving, with `syncedAt` for the last successful sync. `npm run verify:live`
+(see [hosting.md](hosting.md)) checks it and a news page end to end.
+
+To run a sync by hand, run the Scheduled Task's command from 20i's SSH terminal,
+or locally against a copy of the site with `TRIFFID_PUBLIC_DIR` and
+`TRIFFID_PRIVATE_DIR` set.
 
 ## Storage
 
-A dozen posts' worth of images at a time — more if they're carousels — pruned on
-each sync as older posts drop out of the
-window, so the blob store stays at a few megabytes. Worth a glance at Netlify's
-current free-tier Blobs allowance if the post limit is ever raised a lot.
+Each photo is kept at up to five widths, around 250KB per photo in total, and
+photos for posts that drop out of the window are deleted on each sync. With the
+default 48 posts that is tens of megabytes, well inside a 20i package.

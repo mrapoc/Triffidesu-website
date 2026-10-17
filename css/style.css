@@ -34,6 +34,11 @@
    once each over the whole weight range. Serving them ourselves drops a
    third-party connection from the critical path and keeps visitors' IP
    addresses off Google's servers.
+
+   The files are cut down to what the site uses (a third smaller), with
+   fontTools: weights 400-900 only, optical size fixed at its text setting.
+     python -m fontTools.varLib.instancer <google file> wght=400:900 opsz=12 -o x.ttf
+     python -m fontTools.subset x.ttf --unicodes="*" --flavor=woff2 --output-file=<name>.woff2
    ========================================================================== */
 
 @font-face {
@@ -42,7 +47,7 @@
   font-weight: 400 900;
   font-stretch: 100%;
   font-display: swap;
-  src: url("../fonts/nunito-sans-latin.woff2") format("woff2");
+  src: url("../fonts/nunito-sans-wght-latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -52,7 +57,7 @@
   font-weight: 400 900;
   font-stretch: 100%;
   font-display: swap;
-  src: url("../fonts/nunito-sans-latin-ext.woff2") format("woff2");
+  src: url("../fonts/nunito-sans-wght-latin-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
@@ -89,7 +94,7 @@
   --grey-10: #eceef2;
   --grey-20: #dcdfe6;
   --grey-40: #a5abb8;
-  --grey-60: #666e7e;
+  --grey-60: #5d6474;
   --grey-80: #333a47;
   --grey-90: #1c2230;
   --grey-95: #0f1520;
@@ -674,11 +679,18 @@ button {
   max-width: var(--container-narrow);
 }
 
+.prose h2,
 .prose h3 {
   margin-top: var(--space-6);
   margin-bottom: var(--space-3);
 }
 
+/* Where prose is a page's whole content its headings are h2s, at h3 size. */
+.prose h2 {
+  font-size: var(--size-h3);
+}
+
+.prose h2:first-child,
 .prose h3:first-child {
   margin-top: 0;
 }
@@ -740,13 +752,15 @@ button {
   font-size: 0.6875rem;
 }
 
+/* The logo red and leaf are too light behind small white text, so badges use
+   the deeper necker shades, which pass WCAG AA. */
 .badge-red {
-  background: var(--triffid-red);
+  background: var(--necker-red);
   color: var(--grey-00);
 }
 
 .badge-leaf {
-  background: var(--triffid-leaf);
+  background: var(--necker-green);
   color: var(--grey-00);
 }
 
@@ -761,7 +775,8 @@ button {
 }
 
 .badge-teal {
-  background: var(--scouts-teal);
+  /* Scouts teal darkened just enough for small white text to pass AA. */
+  background: #007a6a;
   color: var(--grey-00);
 }
 
@@ -1289,7 +1304,8 @@ button {
   color: var(--text-on-dark);
 }
 
-.hero-wash > img {
+.hero-wash > img,
+.hero-wash > picture > img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -1617,6 +1633,11 @@ button {
   aspect-ratio: 4 / 3;
   overflow: hidden;
   background: var(--navy-05);
+}
+
+/* Waiting for js/main.js to choose its photo: don't print the alt text. */
+img[data-src] {
+  color: transparent;
 }
 
 .activity-card-media img {
@@ -1987,6 +2008,7 @@ button {
   border-top: 3px solid var(--border-subtle);
 }
 
+.step-col h2,
 .step-col h3 {
   margin: 0;
   font-size: var(--size-h4);
@@ -2437,7 +2459,7 @@ button {
   gap: 2px;
 }
 
-.programme-details h4 {
+.programme-details h3 {
   margin: 0;
   font-family: var(--font-display);
   font-weight: var(--weight-heavy);
@@ -2986,6 +3008,153 @@ body.lightbox-open {
 }
 
 /* ==========================================================================
+   12b. News pages (written by server/instagram.php, one per Instagram post)
+   ========================================================================== */
+
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  list-style: none;
+  font-size: var(--size-body-sm);
+  font-weight: var(--weight-bold);
+}
+
+.breadcrumb li + li::before {
+  content: "/";
+  margin-right: var(--space-2);
+  color: var(--text-muted);
+}
+
+.news-lead {
+  margin-bottom: var(--space-5);
+}
+
+.news-lead img,
+.news-photos img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-media);
+  background: var(--navy-05);
+}
+
+.news-photos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.news-photos img {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.news-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.news-more {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--grey-20);
+}
+
+.news-more-heading {
+  font-size: var(--size-h4);
+  margin-bottom: var(--space-4);
+}
+
+.news-pager {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.news-pager-link {
+  display: block;
+  padding: var(--space-4);
+  border-radius: var(--radius-media);
+  background: var(--surface-muted);
+  font-weight: var(--weight-bold);
+  text-decoration: none;
+}
+
+.news-pager-link span {
+  display: block;
+  font-size: var(--size-body-sm);
+  color: var(--text-muted);
+}
+
+.news-pager-link.is-older {
+  text-align: right;
+}
+
+.news-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.news-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-media);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  text-decoration: none;
+  transition: var(--transition-control);
+}
+
+.news-card:hover {
+  transform: var(--lift);
+}
+
+.news-card-media {
+  aspect-ratio: 4 / 3;
+  background: var(--navy-05);
+}
+
+.news-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.news-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.news-card-date {
+  font-size: var(--size-body-sm);
+  color: var(--text-muted);
+}
+
+.news-card-title {
+  font-size: var(--size-h4);
+}
+
+.news-card:hover .news-card-title {
+  color: var(--text-link);
+}
+
+/* ==========================================================================
    13. Badges
    ========================================================================== */
 
@@ -3047,7 +3216,7 @@ body.lightbox-open {
 }
 
 .badge-tile-kind-own {
-  color: var(--triffid-leaf);
+  color: var(--necker-green);
 }
 
 .badge-tile.is-hidden {

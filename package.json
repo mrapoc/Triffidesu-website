@@ -1,12 +1,16 @@
 {
+  "private": true,
   "scripts": {
-    "build:images": "node scripts/build-images.mjs"
-  },
-  "dependencies": {
-    "@netlify/blobs": "^8.1.0",
-    "playwright": "^1.58.2"
+    "build": "node scripts/build.mjs",
+    "build:preview": "node scripts/build-preview.mjs",
+    "build:images": "node scripts/build-images.mjs",
+    "test": "node --test scripts/*.test.mjs && node scripts/php.mjs server/tests/run.php",
+    "package": "node scripts/build.mjs && node scripts/package.mjs",
+    "verify:live": "node scripts/verify-live.mjs"
   },
   "devDependencies": {
-    "sharp": "^0.35.3"
+    "esbuild": "^0.28.2",
+    "lightningcss": "^1.33.0",
+    "sharp": "^0.35.4"
   }
 }

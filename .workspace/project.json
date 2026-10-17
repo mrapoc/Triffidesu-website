@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "lifecycle": "active",
+  "context": [],
+  "required_paths": [
+    "AGENTS.md",
+    "DEVELOPMENT.md",
+    "package-lock.json",
+    "docs/hosting.md",
+    "hosting/htaccess"
+  ],
+  "commands": [
+    {
+      "cwd": ".",
+      "runner": "npm",
+      "name": "test"
+    },
+    {
+      "cwd": ".",
+      "runner": "npm",
+      "name": "build"
+    },
+    {
+      "cwd": ".",
+      "runner": "npm",
+      "name": "package"
+    },
+    {
+      "cwd": ".",
+      "runner": "npm",
+      "name": "verify:live"
+    },
+    {
+      "cwd": ".",
+      "runner": "npm",
+      "name": "build:images"
+    }
+  ]
+}

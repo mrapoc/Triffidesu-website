@@ -18,8 +18,9 @@ The lists below are the full set of hooks. They were read straight out of
 
 ## OnlineScoutManager programme
 
-Code: `js/main.js:89-202`. Data: `netlify/functions/calendar.js`, which proxies
-the OSM iCal URL to dodge CORS.
+Code: `renderProgramme()` and friends in `js/main.js`. Data: `/api/calendar`,
+served by `server/calendar.php`, which relays the OSM iCal feed (OSM allows no
+cross-site reads) and keeps an hour-old copy.
 
 **Hook the page must provide**
 
@@ -36,7 +37,7 @@ the OSM iCal URL to dodge CORS.
     <span class="month">Sep</span>
   </div>
   <div class="programme-details">
-    <h4>Event name</h4>
+    <h3>Event name</h3>
     <span class="programme-time">Fri • 7pm – 9pm</span>
   </div>
   <span class="programme-badge">Next</span>  <!-- first event only -->
@@ -46,17 +47,18 @@ the OSM iCal URL to dodge CORS.
 Styled at `css/style.css:2317-2426`. `.programme-list` is the container class on
 the `#programme-calendar` div itself.
 
-**Failure behaviour worth preserving:** the fetch tries the Netlify function,
-falls back to `corsproxy.io`, then writes a plain-text "Unable to load
-programme" message with a subscribe link. Past events are filtered out and the
+**Failure behaviour worth preserving:** if `/api/calendar` fails (it serves its
+last good copy while OSM is down, so that means no copy at all), a plain-text
+"Unable to load programme" message with a subscribe link replaces the list. Past events are filtered out and the
 list is capped at the next 10.
 
 ## Instagram
 
-Code: `js/main.js:204-854`. Data: `netlify/functions/instagram.js`, backed by
-the hourly `instagram-sync.js` — see `instagram-feed.md` for how that side works.
+Code: the Instagram section of `js/main.js`. Data: `/data/instagram.json`,
+written by the hourly `server/instagram-sync.php`; see `instagram-feed.md` for
+how that side works. Each image in it is `{ src, srcset, width, height }`.
 
-One `fetch('/.netlify/functions/instagram')` on page load feeds **every**
+One `fetch('/data/instagram.json')`, made after the page's first paint, feeds **every**
 Instagram surface below. It fires if any of `#latest-news`, `#instagram-feed`,
 or `[data-tag], .tag-feed, #gallery-grid` is present.
 
@@ -75,7 +77,7 @@ or `[data-tag], .tag-feed, #gallery-grid` is present.
 | `#gallery-count` | `gallery.html:82` | Photo count text |
 | `#gallery-loading` / `#gallery-fallback` | `gallery.html:97,98` | As above |
 | `.tag-feed[data-tag][data-count]` | `dofe`, `join`, `support` | Short strip of matching posts; `hidden` until filled |
-| `img[data-tag]` | `index.html`, `moving-up`, `bring-a-mate` | Static photo swapped for the newest matching real one |
+| `img[data-topic]` / `img[data-tag]` | `index.html`, `moving-up`, `bring-a-mate`, `join` | Static photo swapped for the newest matching real one. The build moves its `src`/`srcset` to `data-src`/`data-srcset` (with a `<noscript>` copy) so it is only downloaded if nothing replaces it |
 | `[data-tag-section]` | wraps each `.tag-feed` | Whole section removed if its tag matches nothing |
 
 The `#latest-news-*` and `#instagram-feed-*` IDs are looked up by string in
@@ -107,11 +109,17 @@ the gallery, and every `.tag-feed`. Restyling it changes all three at once.
 
 ## Checking the feeds after a change
 
-There is no test suite. The honest check is to load the site and look:
+`npm test` covers the sync and the build, not these hooks. Build, then serve
+`dist/` with the PHP endpoints working:
 
 ```
-npx netlify dev
+npm run build
+node scripts/php.mjs -S 127.0.0.1:8080 -t dist scripts/dev-router.php
 ```
+
+`dist/` has no synced posts. Run the sync into it first (with a token in a local
+`private/triffid-config.php`, see `server/tests/run.php` for the environment
+variables), or copy `data/` and `instagram-media/` from the live site.
 
 Then confirm, on `index.html`: the programme list has dated events with a "Next"
 badge on the first; the featured post has an image and caption; the grid has
@@ -124,8 +132,8 @@ Two caveats when working in a Claude Code web container:
   sandbox network policy (the proxy returns 403 to `CONNECT`), so the programme
   feed cannot be fetched for real from there. It will render its fallback
   message. That is the environment, not a bug in the site.
-- The Instagram function needs Netlify Blobs and API credentials, so it also
-  won't return real posts locally without them.
+- The sync needs a real Instagram token, so it won't fetch real posts locally
+  without one.
 
 Where a live fetch isn't possible, drive the render functions with a saved
 sample payload instead, and check the emitted classes against the lists above.
