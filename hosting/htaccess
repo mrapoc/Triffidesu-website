@@ -1,0 +1,71 @@
+# Apache configuration for 20i. Copied to dist/.htaccess by npm run build.
+#
+# HTTP to HTTPS is 20i's "Force HTTPS" switch, not a rule here: 20i documents a
+# second HTTPS redirect as a cause of redirect loops. Everything else about
+# addresses, headers and caching lives in this file. See docs/hosting.md.
+
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+DirectorySlash Off
+ErrorDocument 404 /404.html
+ErrorDocument 410 /404.html
+
+AddType application/manifest+json .webmanifest
+AddType image/webp .webp
+AddType font/woff2 .woff2
+AddDefaultCharset utf-8
+AddCharset utf-8 .json .xml .txt .webmanifest
+
+RewriteEngine On
+
+# One address per page. Redirect targets are absolute: behind 20i's proxy a
+# relative one comes back as http://.
+RewriteCond %{HTTP_HOST} ^triffidesu\.co\.uk$ [NC]
+RewriteRule ^ https://www.triffidesu.co.uk%{REQUEST_URI} [R=301,END,NE]
+
+# PHP internals are never reachable directly. The rewrite below is the only way
+# in, and END stops these rules running again on it.
+RewriteRule ^server(?:/|$) - [R=404,END]
+RewriteRule ^api/calendar$ /server/calendar.php [END]
+
+# Tidy addresses for the pages people type or share. 301s, not a second copy
+# of the page, so search engines see one address per page.
+RewriteRule ^(bring-a-mate|moving-up|dofe|join)/?$ https://www.triffidesu.co.uk/$1.html [R=301,END]
+RewriteCond %{THE_REQUEST} \s/index\.html[\s?]
+RewriteRule ^index\.html$ https://www.triffidesu.co.uk/ [R=301,END]
+RewriteRule ^news$ https://www.triffidesu.co.uk/news/ [R=301,END]
+
+# A news page disappears when its post is taken off Instagram. 410 tells search
+# engines it has gone for good, so it drops out of results quickly.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^news/.+\.html$ - [G]
+
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  # No inline scripts anywhere (JSON-LD is data, not script). Instagram's CDN
+  # is only ever used for a photo the sync failed to copy.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://*.cdninstagram.com https://*.fbcdn.net; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+
+  # Pages revalidate every time, so an upload shows immediately.
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+  # Names that never change content: image widths, the hashed script, fonts,
+  # and Instagram copies keyed by post and slide.
+  <If "%{REQUEST_URI} =~ m#^/(images|fonts|js|instagram-media)/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+  # The sync runs hourly; five minutes keeps a new post from waiting long.
+  <If "%{REQUEST_URI} == '/data/instagram.json'">
+    Header set Cache-Control "public, max-age=300, stale-while-revalidate=86400"
+  </If>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/calendar text/xml application/xml application/json application/javascript text/javascript application/manifest+json image/svg+xml image/x-icon
+</IfModule>

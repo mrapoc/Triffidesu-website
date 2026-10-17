@@ -5,14 +5,35 @@
   "required_paths": [
     "AGENTS.md",
     "DEVELOPMENT.md",
-    "package-lock.json"
+    "package-lock.json",
+    "docs/hosting.md",
+    "hosting/htaccess"
   ],
   "commands": [
     {
       "cwd": ".",
       "runner": "npm",
+      "name": "test"
+    },
+    {
+      "cwd": ".",
+      "runner": "npm",
+      "name": "build"
+    },
+    {
+      "cwd": ".",
+      "runner": "npm",
+      "name": "package"
+    },
+    {
+      "cwd": ".",
+      "runner": "npm",
+      "name": "verify:live"
+    },
+    {
+      "cwd": ".",
+      "runner": "npm",
       "name": "build:images"
     }
-  ],
-  "notes": "Scout group website. Wanted: automatic deploy so edits can be made from a phone."
+  ]
 }

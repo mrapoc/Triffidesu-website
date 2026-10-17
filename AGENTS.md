@@ -1,28 +1,53 @@
-# triffidesu
+# Triffid ESU website operating guide
 
-Shared rules: ~/Projects/AGENTS.md (global guide). This file holds project facts only.
+## Project shape
 
-## Purpose
-Public website for Triffid Explorer Scouts, Ludlow (13-18s): activities, DofE, joining,
-gallery, funding appeal. Hosted on Netlify.
+A static website: root-level HTML pages, shared CSS/JS and images, hosted on
+20i shared Linux hosting (Apache + PHP). There is no application framework and
+no database. Two small PHP jobs live in `server/`: the Online Scout Manager
+calendar relay and the hourly Instagram sync, which also writes a news page per
+post. How it is hosted: [docs/hosting.md](docs/hosting.md). Merging to `main` publishes
+it to 20i through GitHub Actions: [docs/publishing.md](docs/publishing.md).
 
-## Architecture
-- Static HTML pages at the root, one stylesheet (`css/style.css`), one script (`js/main.js`).
-- `js/main.js` renders two live feeds as HTML strings: Instagram and the
-  OnlineScoutManager programme. Netlify Functions in `netlify/functions/` serve them
-  (`instagram*.js`, `calendar.js`), with Netlify Blobs as the cache.
-- `_headers`, `_redirects`, `sitemap.xml`, `robots.txt`, `llms.txt` are Netlify/SEO config.
-- `scripts/build-images.mjs` (sharp) builds responsive images.
-- `docs/` holds the feed contract, funding case text and social notes.
+## Commands
 
-## Conventions and safety
-- Before changing markup, read [docs/feed-contract.md](docs/feed-contract.md): moving or
-  renaming a feed hook without changing `js/main.js` in the same commit silently empties
-  the feed. CSS-only changes are safe.
-- `docs/funding-case.md` is the single source for grant and press text; edit it there.
-- Treat a push or merge to `main` as publishing the live Netlify site; do it only when Sam asks.
+```
+npm test               # build + link check, and the PHP sync/calendar tests
+npm run build          # dist/: the exact public_html contents
+npm run build:preview  # dist/ for a Cloudflare Pages pull request preview
+npm run package        # build, then release/triffidesu-site.zip for 20i
+npm run verify:live    # read-only checks against the deployed site
+npm run build:images   # only when source images or their generation change
+```
 
-Verification commands: [DEVELOPMENT.md](DEVELOPMENT.md).
+`scripts/php.mjs` runs PHP with the extensions 20i provides (curl, gd,
+mbstring), loading them on a stock Windows PHP.
+
+## Rules
+
+- Preserve the existing visual language and shared navigation/footer patterns.
+  `server/templates/page.html` carries the header and footer for the generated
+  news pages: keep it in step with the root pages.
+- Author pages with ordinary relative links and `<link rel="stylesheet"
+  href="css/style.css">` / `<script src="js/main.js" defer>`. The build inlines
+  the CSS, hashes the script and makes links root-absolute; don't do it by hand.
+- Keep `hosting/htaccess`, canonical URLs, `robots.txt`, `sitemap.xml` and
+  `llms.txt` consistent with routing changes.
+- Optimize new images through the existing build script; do not hand-edit
+  generated image variants.
+- Maintain accessible headings, link text, keyboard navigation, contrast and
+  mobile layouts. Lighthouse is at 100 in all four categories on desktop and
+  mobile; treat a regression as a bug.
+- Never ship anything from `private/` or put a token in the repository.
+- A push or merge to `main` publishes the live site. Do it only when Sam asks.
+- Do not upload to 20i, change DNS or change live integrations unless
+  explicitly requested.
+
+## Verification
+
+Check affected pages at desktop and mobile widths against a running local copy
+(`docs/hosting.md`). Run the image build only when source images or generation
+logic changed.
 
 ## Workspace standard
 

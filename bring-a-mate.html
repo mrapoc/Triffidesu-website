@@ -20,8 +20,9 @@
   <meta property="og:site_name" content="Triffid Explorer Scouts">
   <meta property="og:image" content="https://www.triffidesu.co.uk/images/og/bring-a-mate.jpg">
 
-  <link rel="preload" as="image" href="images/rock%20climbing-1080.webp" imagesrcset="images/rock%20climbing-320.webp 320w, images/rock%20climbing-480.webp 480w, images/rock%20climbing-640.webp 640w, images/rock%20climbing-800.webp 800w, images/rock%20climbing-1080.webp 1080w" imagesizes="100vw">
-  <link rel="preload" as="font" type="font/woff2" href="fonts/nunito-sans-latin.woff2" crossorigin>
+  <link rel="preload" as="image" fetchpriority="high" href="images/rock%20climbing-hero-m-486.webp" imagesrcset="images/rock%20climbing-hero-m-360.webp 360w, images/rock%20climbing-hero-m-486.webp 486w" imagesizes="50vw" media="(max-width: 480px)">
+  <link rel="preload" as="image" fetchpriority="high" media="(min-width: 481px)" href="images/rock%20climbing-1080.webp" imagesrcset="images/rock%20climbing-320.webp 320w, images/rock%20climbing-hero-480.webp 480w, images/rock%20climbing-hero-640.webp 640w, images/rock%20climbing-hero-800.webp 800w, images/rock%20climbing-hero-1080.webp 1080w" imagesizes="100vw">
+  <link rel="preload" as="font" type="font/woff2" href="fonts/nunito-sans-wght-latin.woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <script type="application/ld+json">
   {
@@ -114,7 +115,11 @@
   <main id="main">
     <!-- HERO -->
     <section class="hero hero-compact">
-      <img srcset="images/rock%20climbing-320.webp 320w, images/rock%20climbing-480.webp 480w, images/rock%20climbing-640.webp 640w, images/rock%20climbing-800.webp 800w, images/rock%20climbing-1080.webp 1080w" sizes="100vw" class="hero-media" src="images/rock%20climbing-1080.webp" alt="Triffid Explorer climbing real rock on a Shropshire crag" width="1080" height="720" fetchpriority="high">
+      <!-- Phones get just the central strip of the photo, which is all a portrait screen shows. -->
+      <picture>
+        <source media="(max-width: 480px)" srcset="images/rock%20climbing-hero-m-360.webp 360w, images/rock%20climbing-hero-m-486.webp 486w" sizes="50vw">
+        <img srcset="images/rock%20climbing-320.webp 320w, images/rock%20climbing-hero-480.webp 480w, images/rock%20climbing-hero-640.webp 640w, images/rock%20climbing-hero-800.webp 800w, images/rock%20climbing-hero-1080.webp 1080w" sizes="100vw" class="hero-media" src="images/rock%20climbing-1080.webp" alt="Triffid Explorer climbing real rock on a Shropshire crag" width="1080" height="720" fetchpriority="high">
+      </picture>
       <div class="hero-content">
         <span class="eyebrow">A mate sent you this</span>
         <h1>Won't lie: Scouts isn't a flex at school. <em class="hero-em">It should be.</em></h1>
@@ -292,6 +297,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="index.html#activities">Activities</a></li>
           <li><a href="index.html#programme">Programme</a></li>
+          <li><a href="news/">News</a></li>
           <li><a href="dofe.html">Duke of Edinburgh</a></li>
           <li><a href="dofe-kit-list.html">DofE Kit List</a></li>
           <li><a href="dofe-without-school.html">DofE Without School</a></li>

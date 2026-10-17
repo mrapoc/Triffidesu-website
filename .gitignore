@@ -22,3 +22,14 @@ Thumbs.db
 !.env.example
 .claude/settings.local.json
 .mcp.json
+
+# Build output and upload packages
+dist/
+release/
+
+# Local tooling state
+.playwright-mcp/
+.claude/launch.json
+
+# Host-only secrets and state (a local preview creates private/triffid-state/)
+private/
