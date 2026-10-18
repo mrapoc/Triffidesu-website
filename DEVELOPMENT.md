@@ -4,7 +4,7 @@ Read AGENTS.md. This is a static site with a small build step and two PHP
 scripts, not a framework application. Commands checked on 24 September 2026
 with Node 24 and PHP 8.4.
 
-```powershell
+```
 npm install
 npm test
 npm run build

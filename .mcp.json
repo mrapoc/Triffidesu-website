@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "airis-gateway": {
-      "type": "sse",
-      "url": "http://localhost:9400/mcp/sse",
-      "headers": {}
-    }
-  }
-}

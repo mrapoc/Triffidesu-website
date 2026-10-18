@@ -11,7 +11,7 @@ it to 20i through GitHub Actions: [docs/publishing.md](docs/publishing.md).
 
 ## Commands
 
-```powershell
+```
 npm test               # build + link check, and the PHP sync/calendar tests
 npm run build          # dist/: the exact public_html contents
 npm run build:preview  # dist/ for a Cloudflare Pages pull request preview

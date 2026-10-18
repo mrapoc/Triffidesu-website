@@ -18,6 +18,10 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+.env.*
+!.env.example
+.claude/settings.local.json
+.mcp.json
 
 # Build output and upload packages
 dist/
