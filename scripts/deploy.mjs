@@ -2,7 +2,7 @@
 // `live` branch and pushes it. 20i's Git deployment pulls `live` into
 // public_html. Run through `npm run deploy` from a clean checkout of main.
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -20,6 +20,8 @@ const source = git(['rev-parse', '--short', 'HEAD']);
 run('npm', ['test']);
 // Says which commit is live: https://www.triffidesu.co.uk/version.txt
 writeFileSync('dist/version.txt', `${git(['rev-parse', 'HEAD'])}\n`);
+// 20i runs this after each pull to copy the clone into public_html.
+copyFileSync('hosting/20i-deploy.sh', 'dist/.20i-deploy.sh');
 
 // A throwaway index, so dist/ becomes the branch root without touching the
 // working tree or the real index.
