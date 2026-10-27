@@ -64,7 +64,9 @@ through `npm run build:images`), new pages, and anything in `js/`, `css/`,
 ### 1. Let 20i deploy the `live` branch
 
 My20i: the `triffidesu.co.uk` package, **Git Deployment** (GitHub connected),
-repository `Triffidesu-website`, branch **`live`**, target `public_html`.
+repository `Triffidesu-website`, branch **`live`**, deployment path
+`public_html` (the folder the website is served from, not the home folder).
+20i keeps its Git clone there, so `.htaccess` answers 404 for `/.git`.
 
 Never choose `main`: it holds the source, so 20i would serve unbuilt pages and
 publish internal files such as `AGENTS.md`, `docs/` and `scripts/`.

@@ -49,6 +49,8 @@ await expectRedirect('/news', 'https://www.triffidesu.co.uk/news/');
 await expectStatus('/this-page-does-not-exist', 404);
 await expectStatus('/news/2000-01-01-gone.html', 410);
 await expectStatus('/server/bootstrap.php', 404);
+await expectStatus('/.git/HEAD', 404);
+await expectStatus('/.git/config', 404);
 await expectStatus('/server/templates/page.html', 404);
 await expectStatus('/server/instagram-sync.php', 404);
 
