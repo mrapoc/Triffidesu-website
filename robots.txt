@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Sitemap: https://www.triffidesu.co.uk/sitemap.xml
+Sitemap: https://www.triffidesu.co.uk/sitemap-posts.xml
