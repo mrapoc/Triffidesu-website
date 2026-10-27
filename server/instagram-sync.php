@@ -3,7 +3,7 @@
 //
 // Run by a 20i Scheduled Task (docs/hosting.md), never over the web:
 //
-//   php /home/sites/<package>/public_html/server/instagram-sync.php
+//   php /home/sites/<package>/Triffidesu-website/server/instagram-sync.php
 //
 // On failure it changes nothing, so the site keeps the last good copy, and the
 // reason is written to private/triffid-state/instagram-status.json.

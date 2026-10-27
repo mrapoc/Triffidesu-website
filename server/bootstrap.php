@@ -2,10 +2,10 @@
 // Shared plumbing for the site's two PHP jobs: the programme proxy and the
 // Instagram sync. See docs/hosting.md for how these are deployed on 20i.
 //
-// Layout on the host (the site home is the folder that contains public_html):
+// Layout on the host (the site home is the folder that contains the web root):
 //
-//   public_html/            the site; this file is public_html/server/bootstrap.php
-//   private/                beside public_html, never served
+//   Triffidesu-website/     the web root; this file is <web root>/server/bootstrap.php
+//   private/                beside the web root, never served
 //     triffid-config.php    secrets, written by hand once (see docs/hosting.md)
 //     triffid-state/        tokens and caches the scripts write for themselves
 //
