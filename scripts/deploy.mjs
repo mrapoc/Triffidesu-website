@@ -1,8 +1,8 @@
 // Publishes the site: tests and builds, then commits dist/ as the whole of the
-// `live` branch and pushes it. 20i's Git deployment pulls `live` into
-// public_html. Run through `npm run deploy` from a clean checkout of main.
+// `live` branch and pushes it. 20i's Git deployment pulls `live` into the
+// folder the domain is served from. Run through `npm run deploy` from a clean checkout of main.
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -20,8 +20,6 @@ const source = git(['rev-parse', '--short', 'HEAD']);
 run('npm', ['test']);
 // Says which commit is live: https://www.triffidesu.co.uk/version.txt
 writeFileSync('dist/version.txt', `${git(['rev-parse', 'HEAD'])}\n`);
-// 20i runs this after each pull to copy the clone into public_html.
-copyFileSync('hosting/20i-deploy.sh', 'dist/.20i-deploy.sh');
 
 // A throwaway index, so dist/ becomes the branch root without touching the
 // working tree or the real index.
@@ -37,7 +35,7 @@ try {
   } else {
     const commit = git(['commit-tree', tree, ...(parent ? ['-p', parent] : []), '-m', `Publish ${branch} at ${source}`]);
     git(['push', 'origin', `${commit}:refs/heads/live`]);
-    console.log(`Pushed ${branch} at ${source} to live. 20i deploys it within a few minutes; then run npm run verify:live.`);
+    console.log(`Pushed ${branch} at ${source} to live. Press Deploy in My20i (Git Version Control), then run npm run verify:live.`);
   }
 } finally {
   rmSync(dir, { recursive: true, force: true });

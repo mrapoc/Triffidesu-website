@@ -40,9 +40,6 @@ RewriteRule ^news$ https://www.triffidesu.co.uk/news/ [R=301,END]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^news/.+\.html$ - [G]
 
-# 20i's Git deployment leaves its clone's .git folder in public_html.
-RewriteRule (^|/)\.git(/|$) - [R=404,L]
-
 <IfModule mod_headers.c>
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
   Header always set X-Content-Type-Options "nosniff"

@@ -1,9 +1,10 @@
 # Publishing changes, including from a phone
 
 The live site is whatever is on the `live` branch. That branch holds only the
-built site (`dist/`), made by `npm run deploy` from `main`; 20i's Git
-deployment copies it into `public_html` whenever it changes. Nobody uploads
-anything by hand.
+built site (`dist/`), made by `npm run deploy` from `main`. 20i keeps a Git
+clone of `live` in `Triffidesu-website/`, which is the domain's document root;
+pressing **Deploy** in My20i pulls the latest `live` into it. Nobody uploads
+files by hand.
 
 | Step | What happens | Where |
 | --- | --- | --- |
@@ -11,7 +12,8 @@ anything by hand.
 | Checks run | Build, links, feed hooks and PHP tests; a green tick or a red cross on the PR | GitHub Actions, workflow "Site" (needs Actions minutes) |
 | Preview builds | A copy of the site at an unlisted `*.pages.dev` address | Cloudflare Pages |
 | Merge the PR | `main` changes; the live site does not yet | github.com |
-| Publish | `npm run deploy` tests, builds and pushes `live`; 20i deploys it | a computer, or a Claude cloud session |
+| Publish | `npm run deploy` tests, builds and pushes `live` | a computer, or a Claude cloud session |
+| Go live | **Deploy** pulls `live` onto the site | My20i, Git Version Control |
 
 ## On a phone, on a scout night
 
@@ -33,8 +35,10 @@ merging, but it can't edit files.
      is expected, they only work on the real site.
 5. Happy? Tap **Merge pull request**, then **Confirm merge**.
 6. Publish: in the Claude app, start a cloud session on this repository and
-   ask it to "deploy main". It runs `npm run deploy`, waits a few minutes,
-   then `npm run verify:live`. Pull to refresh on the real site.
+   ask it to "deploy main". It runs `npm run deploy`. Then in My20i open
+   **Git Version Control**, the repository's **Options**, **Manage**,
+   **Deployment**, and tap **Deploy**. A few seconds later
+   `https://www.triffidesu.co.uk/version.txt` shows the new commit.
 
 To change more than one file in the same PR: after step 3, go back to the
 repository, switch to the PR's branch (the branch menu at the top), edit the
@@ -63,10 +67,16 @@ through `npm run build:images`), new pages, and anything in `js/`, `css/`,
 
 ### 1. Let 20i deploy the `live` branch
 
-My20i: the `triffidesu.co.uk` package, **Git Deployment** (GitHub connected),
-repository `Triffidesu-website`, branch **`live`**, deployment path
-`public_html` (the folder the website is served from, not the home folder).
-20i keeps its Git clone there, so `.htaccess` answers 404 for `/.git`.
+Set up on 27 October 2026:
+
+- My20i, **Git Version Control**: GitHub connected, repository
+  `Triffidesu-website` cloned to `/home/sites/7a/f/f05cb1723f/Triffidesu-website`,
+  deployment branch **`live`**. 20i only pulls when **Deploy** is pressed; a
+  push alone does nothing. The Deployment Script field does not run commands,
+  so leave it empty.
+- My20i, **Manage Domains**: document root `Triffidesu-website`, so the clone
+  is the site. `public_html` is no longer served; it still holds the old copy.
+- 20i refuses `/.git` itself (403), so the clone's history is not readable.
 
 Never choose `main`: it holds the source, so 20i would serve unbuilt pages and
 publish internal files such as `AGENTS.md`, `docs/` and `scripts/`.
@@ -100,9 +110,9 @@ there.
   pushes it. The commit message names the `main` commit it came from, and
   `/version.txt` on the live site holds its full hash. If
   nothing changed it pushes nothing.
-- 20i pulls `live` into `public_html`. The Instagram sync's `data/`,
-  `instagram-media/`, `news/` and `sitemap-posts.xml` are not in the branch;
-  if a deploy ever removes them, the next hourly sync writes them again.
+- **Deploy** runs `git pull` in the clone. The Instagram sync's `data/`,
+  `instagram-media/`, `news/` and `sitemap-posts.xml` are untracked files
+  there, so a pull leaves them alone.
 - `.github/workflows/site.yml` only runs the checks, on every PR and push to
   `main`. It no longer uploads; the old SSH secrets `TWENTYI_SSH_KEY` and
   `TWENTYI_SSH_USER` can be deleted, along with that key in My20i SSH Access.

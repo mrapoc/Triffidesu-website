@@ -50,7 +50,7 @@ address to check it on.
    (Site configuration, Environment variables). Permissions: `private/` 0700,
    the config file 0600.
 4. **Scheduled Task.** My20i, Scheduled Tasks, add:
-   `php /home/sites/<package folder>/public_html/server/instagram-sync.php`
+   `/usr/bin/php85 /home/sites/<package folder>/Triffidesu-website/server/instagram-sync.php`
    to run every hour. Pick the same PHP version as the site. File Manager shows
    the real path at the top when you open `public_html`.
 5. **First sync.** Wait for the first run (up to an hour), then check
@@ -99,8 +99,10 @@ Then run PageSpeed Insights on the homepage and a news page.
       instagram-status.json   last sync result or error
       instagram-token.json    refreshed Instagram Login token, if that kind
       calendar.ics            last good copy of the OSM programme
-  public_html/                the zip, plus data/, instagram-media/, news/,
+  Triffidesu-website/         the web root: 20i's Git clone of the live
+                              branch, plus data/, instagram-media/, news/,
                               sitemap-posts.xml from the sync
+  public_html/                old web root, no longer served
 ```
 
 To take a photo down, delete the post on Instagram. The next hourly sync

@@ -14,7 +14,7 @@ it: 20i deploys the `live` branch, which holds only the built site
 
 ```
 npm test               # build + link check, and the PHP sync/calendar tests
-npm run build          # dist/: the exact public_html contents
+npm run build          # dist/: the exact web root contents
 npm run build:preview  # dist/ for a Cloudflare Pages pull request preview
 npm run package        # build, then release/triffidesu-site.zip for 20i
 npm run deploy         # test, build, push dist/ to the live branch (publishes)
