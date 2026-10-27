@@ -1,22 +1,13 @@
-# Checks every pull request, and publishes main to 20i. See docs/publishing.md.
-#
-# Pull request: npm test (build, links, feed hooks, PHP tests). A red cross
-# means don't merge.
-# Push to main: the same checks, then dist/ is copied into public_html on 20i
-# over SSH, then the live site is checked.
-# Run workflow (Actions tab): a dry run by default. It connects and lists what
-# would change without uploading anything.
+# Checks every pull request and push to main: npm test (build, links, feed
+# hooks, PHP tests). A red cross means don't merge. Publishing is separate:
+# `npm run deploy` pushes the built site to the `live` branch, which 20i
+# deploys. See docs/publishing.md.
 name: Site
 on:
   pull_request:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: List what would change without uploading
-        type: boolean
-        default: true
 permissions:
   contents: read
 concurrency:
@@ -40,24 +31,3 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
 
-      - name: Upload to 20i
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        env:
-          SSH_KEY: ${{ secrets.TWENTYI_SSH_KEY }}
-          SSH_USER: ${{ secrets.TWENTYI_SSH_USER }}
-          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
-        run: |
-          test -n "$SSH_KEY" && test -n "$SSH_USER" || { echo "::error::TWENTYI_SSH_KEY and TWENTYI_SSH_USER secrets are not set (docs/publishing.md)"; exit 1; }
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
-          # 20i's UK SSH host key, pinned so the upload can't go anywhere else.
-          echo 'ssh.gb.stackcp.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAD9Kh9Z6nNayDTbhodFXARVMq0nFClVcf36Q8Xz5fE6' > ~/.ssh/known_hosts
-          # No --delete: the Instagram sync writes data/, instagram-media/, news/
-          # and sitemap-posts.xml on the server, and they must survive.
-          rsync -rlz --checksum --itemize-changes --chmod=D755,F644 $DRY_RUN \
-            -e 'ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes' \
-            dist/ "$SSH_USER@ssh.gb.stackcp.com:public_html/"
-
-      - name: Check the live site
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && !inputs.dry_run
-        run: npm run verify:live

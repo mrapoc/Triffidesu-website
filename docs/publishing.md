@@ -1,15 +1,17 @@
 # Publishing changes, including from a phone
 
-The live site is whatever is on the `main` branch. Merging a pull request into
-`main` publishes it to 20i about two minutes later. Nobody uploads anything by
-hand.
+The live site is whatever is on the `live` branch. That branch holds only the
+built site (`dist/`), made by `npm run deploy` from `main`; 20i's Git
+deployment copies it into `public_html` whenever it changes. Nobody uploads
+anything by hand.
 
 | Step | What happens | Where |
 | --- | --- | --- |
 | Edit a file and propose the change | A pull request (PR) is opened | github.com |
-| Checks run | Build, links, feed hooks and PHP tests; a green tick or a red cross on the PR | GitHub Actions, workflow "Site" |
+| Checks run | Build, links, feed hooks and PHP tests; a green tick or a red cross on the PR | GitHub Actions, workflow "Site" (needs Actions minutes) |
 | Preview builds | A copy of the site at an unlisted `*.pages.dev` address | Cloudflare Pages |
-| Merge the PR | The same checks run again, then `dist/` is copied into `public_html` on 20i and the live site is checked | GitHub Actions |
+| Merge the PR | `main` changes; the live site does not yet | github.com |
+| Publish | `npm run deploy` tests, builds and pushes `live`; 20i deploys it | a computer, or a Claude cloud session |
 
 ## On a phone, on a scout night
 
@@ -30,8 +32,9 @@ merging, but it can't edit files.
      and Instagram sections show "unable to load" messages on a preview; that
      is expected, they only work on the real site.
 5. Happy? Tap **Merge pull request**, then **Confirm merge**.
-6. The **Actions** tab shows the upload. When the "Site" run for `main` is
-   green, the change is live. Pull to refresh on the real site.
+6. Publish: in the Claude app, start a cloud session on this repository and
+   ask it to "deploy main". It runs `npm run deploy`, waits a few minutes,
+   then `npm run verify:live`. Pull to refresh on the real site.
 
 To change more than one file in the same PR: after step 3, go back to the
 repository, switch to the PR's branch (the branch menu at the top), edit the
@@ -40,7 +43,8 @@ next file and commit straight to that branch.
 ### Undo
 
 Open the merged PR and tap **Revert**. That opens a new PR putting things back;
-merge it like any other and the old version is live again two minutes later.
+merge it and publish again like any other change. In a hurry, `git push
+origin live~1:live --force` puts the previous build back (needs Sam's say-so).
 
 ### What to leave alone
 
@@ -57,30 +61,13 @@ through `npm run build:images`), new pages, and anything in `js/`, `css/`,
 
 ## One-time setup
 
-### 1. Let GitHub upload to 20i
+### 1. Let 20i deploy the `live` branch
 
-GitHub needs its own SSH key for the 20i package, kept as a repository secret.
-It can do nothing except log in to this one hosting package.
+My20i: the `triffidesu.co.uk` package, **Git Deployment** (GitHub connected),
+repository `Triffidesu-website`, branch **`live`**, target `public_html`.
 
-1. Make a key pair just for this (an agent can make it and store the private
-   half straight into GitHub without showing it). The private half never goes
-   anywhere except the GitHub secret.
-2. My20i: **Manage Hosting**, the `triffidesu.co.uk` package, **SSH Access**
-   (under Security). Paste the public key into **Public Key**, tap
-   **Add Public Key**. Note the username shown on that page (normally
-   `triffidesu.co.uk`). Keys can take up to 30 minutes to start working.
-3. GitHub: repository **Settings**, **Secrets and variables**, **Actions**,
-   **New repository secret**, twice:
-   - `TWENTYI_SSH_KEY`: the private key, whole file including the BEGIN and END
-     lines.
-   - `TWENTYI_SSH_USER`: the username from step 2.
-4. Once this workflow is on `main`, test it any time without changing anything: **Actions**, **Site**, **Run workflow**,
-   leave **List what would change without uploading** ticked, **Run workflow**.
-   A green run that lists files means it connects and finds `public_html`.
-
-The workflow pins 20i's UK SSH server key (`ssh.gb.stackcp.com`). If 20i ever
-changes it, uploads fail safely with a host key error until the line in
-`.github/workflows/site.yml` is updated.
+Never choose `main`: it holds the source, so 20i would serve unbuilt pages and
+publish internal files such as `AGENTS.md`, `docs/` and `scripts/`.
 
 ### 2. Previews on Cloudflare Pages
 
@@ -105,18 +92,16 @@ there.
 
 ## How it works
 
-`.github/workflows/site.yml`:
-
-- On every PR: `npm ci`, then `npm test` with PHP 8.4, the version on 20i.
-- On a push to `main`: the same, then `rsync` copies `dist/` into
-  `public_html`. It overwrites changed files and never deletes, so the
-  Instagram sync's `data/`, `instagram-media/`, `news/` and `sitemap-posts.xml`
-  survive. Then `npm run verify:live` checks the real site. A failure there
-  after a green upload usually means the Instagram sync or OSM is unwell, not
-  the change.
-- **Run workflow** on `main` with the box unticked uploads the current `main`
-  again, for example after fixing something on the server by hand.
-
-Old hashed `js/main.*.js` files are left in `public_html` because nothing is
-deleted. They are tiny and harmless; clear them out by hand once in a while if
-you like.
+- `npm run deploy` (`scripts/deploy.mjs`) refuses to run with uncommitted
+  changes or off `main`, runs `npm test` (which builds `dist/`), then commits
+  `dist/` as the whole tree of `live`, on top of the previous `live` commit, and
+  pushes it. The commit message names the `main` commit it came from. If
+  nothing changed it pushes nothing.
+- 20i pulls `live` into `public_html`. The Instagram sync's `data/`,
+  `instagram-media/`, `news/` and `sitemap-posts.xml` are not in the branch;
+  if a deploy ever removes them, the next hourly sync writes them again.
+- `.github/workflows/site.yml` only runs the checks, on every PR and push to
+  `main`. It no longer uploads; the old SSH secrets `TWENTYI_SSH_KEY` and
+  `TWENTYI_SSH_USER` can be deleted, along with that key in My20i SSH Access.
+- `npm run verify:live` afterwards checks the real site. A failure about the
+  last sync usually means the Instagram sync or OSM is unwell, not the change.

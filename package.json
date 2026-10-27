@@ -6,6 +6,7 @@
     "build:images": "node scripts/build-images.mjs",
     "test": "node --test scripts/*.test.mjs && node scripts/php.mjs server/tests/run.php",
     "package": "node scripts/build.mjs && node scripts/package.mjs",
+    "deploy": "node scripts/deploy.mjs",
     "verify:live": "node scripts/verify-live.mjs"
   },
   "devDependencies": {
