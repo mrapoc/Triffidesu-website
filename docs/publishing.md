@@ -95,7 +95,8 @@ there.
 - `npm run deploy` (`scripts/deploy.mjs`) refuses to run with uncommitted
   changes or off `main`, runs `npm test` (which builds `dist/`), then commits
   `dist/` as the whole tree of `live`, on top of the previous `live` commit, and
-  pushes it. The commit message names the `main` commit it came from. If
+  pushes it. The commit message names the `main` commit it came from, and
+  `/version.txt` on the live site holds its full hash. If
   nothing changed it pushes nothing.
 - 20i pulls `live` into `public_html`. The Instagram sync's `data/`,
   `instagram-media/`, `news/` and `sitemap-posts.xml` are not in the branch;
