@@ -26,9 +26,10 @@ Lighthouse runs use the shared build worker (BUILD_WORKER.md) against the built
 output with synced posts; PageSpeed Insights against the live site is the final
 word, since 20i's own network and compression aren't reproduced locally.
 
-Publishing: `npm run deploy` on a clean `main` tests, builds and pushes `dist/`
-as the `live` branch; **Deploy** in My20i Git Version Control pulls it into the
-web root; then run `npm run verify:live` (docs/publishing.md). Deploying, pushing to `live` or
+Publishing: every push to `main` runs `npm run deploy` in GitHub Actions (tests,
+builds and pushes `dist/` as the `live` branch), pulls `live` into 20i's web
+root over SSH, then runs `npm run verify:live` (docs/publishing.md). Pushing to
+`main` or `live`, `npm run deploy`, or
 a manual zip upload (docs/hosting.md) needs Sam's authorization, as do DNS changes and anything touching the live Instagram token.
 New worktrees need their own `npm install`; `private/` config never leaves the
 host. Keep durable decisions in docs and use short handovers with branch,

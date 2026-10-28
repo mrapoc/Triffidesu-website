@@ -1,9 +1,10 @@
 # Publishing changes, including from a phone
 
 The live site is whatever is on the `live` branch. That branch holds only the
-built site (`dist/`), made by `npm run deploy` from `main`. 20i keeps a Git
-clone of `live` in `Triffidesu-website/`, which is the domain's document root;
-pressing **Deploy** in My20i pulls the latest `live` into it. Nobody uploads
+built site (`dist/`). 20i keeps a Git clone of `live` in
+`Triffidesu-website/`, which is the domain's document root. Every push to
+`main` makes GitHub Actions build `live` and pull it into that clone, so a
+merged change is live a couple of minutes later. Nobody logs into 20i or uploads
 files by hand.
 
 | Step | What happens | Where |
@@ -11,9 +12,8 @@ files by hand.
 | Edit a file and propose the change | A pull request (PR) is opened | github.com |
 | Checks run | Build, links, feed hooks and PHP tests; a green tick or a red cross on the PR | GitHub Actions, workflow "Site" (needs Actions minutes) |
 | Preview builds | A copy of the site at an unlisted `*.pages.dev` address | Cloudflare Pages |
-| Merge the PR | `main` changes; the live site does not yet | github.com |
-| Publish | `npm run deploy` tests, builds and pushes `live` | a computer, or a Claude cloud session |
-| Go live | **Deploy** pulls `live` onto the site | My20i, Git Version Control |
+| Merge the PR | `main` changes | github.com |
+| Publish | `npm run deploy` tests, builds and pushes `live`; 20i's clone pulls it; the live site is checked | GitHub Actions, workflow "Site" |
 
 ## On a phone, on a scout night
 
@@ -33,12 +33,14 @@ merging, but it can't edit files.
      Cloudflare check). Open it and look at the page you changed. The programme
      and Instagram sections show "unable to load" messages on a preview; that
      is expected, they only work on the real site.
-5. Happy? Tap **Merge pull request**, then **Confirm merge**.
-6. Publish: in the Claude app, start a cloud session on this repository and
-   ask it to "deploy main". It runs `npm run deploy`. Then in My20i open
-   **Git Version Control**, the repository's **Options**, **Manage**,
-   **Deployment**, and tap **Deploy**. A few seconds later
-   `https://www.triffidesu.co.uk/version.txt` shows the new commit.
+5. Happy? Tap **Merge pull request**, then **Confirm merge**. That publishes
+   it: a couple of minutes later `https://www.triffidesu.co.uk/version.txt`
+   shows the new commit, and the **Site** run on `main` has a green tick. A red
+   cross there means the site was not updated, or updated but failed a check;
+   tap **Details**.
+
+A Claude session in the Claude app can do all of this for you: ask it for the
+change, then to merge it.
 
 To change more than one file in the same PR: after step 3, go back to the
 repository, switch to the PR's branch (the branch menu at the top), edit the
@@ -47,7 +49,7 @@ next file and commit straight to that branch.
 ### Undo
 
 Open the merged PR and tap **Revert**. That opens a new PR putting things back;
-merge it and publish again like any other change. In a hurry, `git push
+merge it like any other change. In a hurry, `git push
 origin live~1:live --force` puts the previous build back (needs Sam's say-so).
 
 ### What to leave alone
@@ -71,9 +73,11 @@ Set up on 27 October 2026:
 
 - My20i, **Git Version Control**: GitHub connected, repository
   `Triffidesu-website` cloned to `/home/sites/7a/f/f05cb1723f/Triffidesu-website`,
-  deployment branch **`live`**. 20i only pulls when **Deploy** is pressed; a
-  push alone does nothing. The Deployment Script field does not run commands,
-  so leave it empty.
+  deployment branch **`live`**. 20i itself only pulls when **Deploy** is
+  pressed (20i support confirmed on 28 October 2026 that it has no
+  deploy-on-push), so GitHub Actions does the pull over SSH instead. **Deploy**
+  still works as a manual fallback. The Deployment Script field does not run
+  commands, so leave it empty.
 - My20i, **Manage Domains**: document root `Triffidesu-website`, so the clone
   is the site. `public_html` is no longer served; it still holds the old copy.
 - 20i refuses `/.git` itself (403), so the clone's history is not readable.
@@ -110,11 +114,15 @@ there.
   pushes it. The commit message names the `main` commit it came from, and
   `/version.txt` on the live site holds its full hash. If
   nothing changed it pushes nothing.
-- **Deploy** runs `git pull` in the clone. The Instagram sync's `data/`,
-  `instagram-media/`, `news/` and `sitemap-posts.xml` are untracked files
-  there, so a pull leaves them alone.
-- `.github/workflows/site.yml` only runs the checks, on every PR and push to
-  `main`. It no longer uploads; the old SSH secrets `TWENTYI_SSH_KEY` and
-  `TWENTYI_SSH_USER` can be deleted, along with that key in My20i SSH Access.
+- The workflow's "Pull live onto 20i" step SSHes in with the
+  `TWENTYI_SSH_KEY` and `TWENTYI_SSH_USER` secrets and runs `git pull --ff-only`
+  in the clone from the public GitHub URL, which is what **Deploy** does. It
+  then checks `/version.txt` shows the commit and runs `npm run verify:live`.
+- The repository is public (since 28 October 2026), so Actions is free, with
+  secret scanning and push protection on. Never commit anything from
+  `private/`.
+- **Deploy** and the workflow both run `git pull` in the clone. The Instagram
+  sync's `data/`, `instagram-media/`, `news/` and `sitemap-posts.xml` are
+  untracked files there, so a pull leaves them alone.
 - `npm run verify:live` afterwards checks the real site. A failure about the
   last sync usually means the Instagram sync or OSM is unwell, not the change.

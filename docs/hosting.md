@@ -12,8 +12,8 @@ fresh-tech.uk. It is plain HTML plus two small PHP jobs; there is no database.
 
 ## Build an upload
 
-Normally nobody does this: `npm run deploy` publishes through 20i's Git
-deployment (docs/publishing.md). The zip is the fallback if that is unavailable.
+Normally nobody does this: a push to `main` publishes through GitHub Actions
+and 20i's Git clone (docs/publishing.md). The zip is the fallback if that is unavailable.
 
 ```powershell
 npm test

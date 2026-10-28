@@ -1,7 +1,8 @@
-# Checks every pull request and push to main: npm test (build, links, feed
-# hooks, PHP tests). A red cross means don't merge. Publishing is separate:
-# `npm run deploy` pushes the built site to the `live` branch, which 20i
-# deploys. See docs/publishing.md.
+# Checks every pull request: npm test (build, links, feed hooks, PHP tests).
+# A red cross means don't merge.
+# Push to main publishes: npm run deploy (the same checks, then the built site
+# is pushed to the `live` branch), then 20i's clone of `live` is pulled over
+# SSH and the live site is checked. See docs/publishing.md.
 name: Site
 on:
   pull_request:
@@ -17,6 +18,10 @@ jobs:
   site:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      # The Publish step pushes the live branch. Pull requests from forks
+      # always get a read-only token.
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -29,5 +34,36 @@ jobs:
           extensions: curl, gd, mbstring
           coverage: none
       - run: npm ci --ignore-scripts
-      - run: npm test
+      - if: github.ref != 'refs/heads/main' || github.event_name == 'pull_request'
+        run: npm test
+
+      - name: Publish to the live branch
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          npm run deploy
+
+      - name: Pull live onto 20i
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          SSH_KEY: ${{ secrets.TWENTYI_SSH_KEY }}
+          SSH_USER: ${{ secrets.TWENTYI_SSH_USER }}
+        run: |
+          test -n "$SSH_KEY" && test -n "$SSH_USER" || { echo "::error::TWENTYI_SSH_KEY and TWENTYI_SSH_USER secrets are not set (docs/publishing.md)"; exit 1; }
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          # 20i's UK SSH host key, pinned so this can't connect anywhere else.
+          echo 'ssh.gb.stackcp.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAD9Kh9Z6nNayDTbhodFXARVMq0nFClVcf36Q8Xz5fE6' > ~/.ssh/known_hosts
+          # What My20i's Deploy button does. The repository is public, so the
+          # pull needs no GitHub credentials on 20i.
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$SSH_USER@ssh.gb.stackcp.com" \
+            'cd Triffidesu-website && git pull --ff-only https://github.com/mrapoc/Triffidesu-website.git live'
+
+      - name: Check the live site
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          live=$(curl -fsS "https://www.triffidesu.co.uk/version.txt?$GITHUB_SHA")
+          test "$live" = "$GITHUB_SHA" || { echo "::error::version.txt shows $live, expected $GITHUB_SHA"; exit 1; }
+          npm run verify:live
 

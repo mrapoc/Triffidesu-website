@@ -1,6 +1,7 @@
 // Publishes the site: tests and builds, then commits dist/ as the whole of the
-// `live` branch and pushes it. 20i's Git deployment pulls `live` into the
-// folder the domain is served from. Run through `npm run deploy` from a clean checkout of main.
+// `live` branch and pushes it. 20i's clone of `live` is the folder the domain
+// is served from. GitHub Actions runs this on every push to main, then pulls
+// the clone (docs/publishing.md).
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -35,7 +36,7 @@ try {
   } else {
     const commit = git(['commit-tree', tree, ...(parent ? ['-p', parent] : []), '-m', `Publish ${branch} at ${source}`]);
     git(['push', 'origin', `${commit}:refs/heads/live`]);
-    console.log(`Pushed ${branch} at ${source} to live. Press Deploy in My20i (Git Version Control), then run npm run verify:live.`);
+    console.log(`Pushed ${branch} at ${source} to live.`);
   }
 } finally {
   rmSync(dir, { recursive: true, force: true });
