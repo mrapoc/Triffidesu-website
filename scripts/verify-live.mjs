@@ -8,7 +8,12 @@ let failed = 0;
 
 async function get(path, method = 'GET') {
   const url = path.startsWith('http') ? path : base + path;
-  return fetch(url, { method, redirect: 'manual', headers: { 'Accept-Encoding': 'gzip, br' } });
+  const request = () => fetch(url, { method, redirect: 'manual', headers: { 'Accept-Encoding': 'gzip, br' } });
+  // 20i's proxy can answer one 502 while a deploy lands; a real fault repeats.
+  const res = await request();
+  if (res.status < 500) return res;
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  return request();
 }
 
 function check(ok, what, detail = '') {
