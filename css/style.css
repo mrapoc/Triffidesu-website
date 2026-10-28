@@ -1897,6 +1897,21 @@ img[data-src] {
   box-shadow: 0 0 0 2px var(--triffid-gold);
 }
 
+/* A leader without a photo yet: their initial in the same gold ring. */
+.leader-initial {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  flex: none;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 2px var(--triffid-gold);
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+  font-size: var(--size-h4);
+  color: var(--text-on-dark);
+}
+
 .leader-name {
   display: flex;
   flex-direction: column;
